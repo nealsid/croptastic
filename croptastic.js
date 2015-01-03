@@ -82,13 +82,31 @@ Croptastic.prototype.updatePreview = function () {
   // know if the image has actually been loaded yet in the setup
   // function.
   if (this.widthMultiplier === null) {
+    // The image isn't actually attached to the DOM, so width/height
+    // and naturalWidth,naturalHeight (resp) are the same.
     this.widthMultiplier =
       this.imageForRaphaelSVGImage.width / this.svgImage.attr("width");
+    if (this.widthMultiplier == 0) {
+      this.widthMultiplier = null;
+      return;
+    }
+    console.log("width multiplier calc");
+    console.log("this.imageForRaphaelSVGImage.width: " + this.imageForRaphaelSVGImage.width);
+    console.log("this.svgImage.attr(\"width\"): " + this.svgImage.attr("width"));
   }
+
   if (this.heightMultiplier === null) {
     this.heightMultiplier =
       this.imageForRaphaelSVGImage.height / this.svgImage.attr("height");
+    if (this.heightMultiplier == 0) {
+      this.heightMultiplier = null;
+      return;
+    }
+    console.log("height multiplier calc");
+    console.log("this.imageForRaphaelSVGImage.height: " + this.imageForRaphaelSVGImage.height);
+    console.log("this.svgImage.attr(\"height\"): " + this.svgImage.attr("height"));
   }
+
   this.drawingContext.clearRect(0, 0, this.previewWidth, this.previewHeight);
   var image_coordinate_ul_x = (this.viewportCenterX - (this.sideLengthX / 2)) * this.widthMultiplier;
   var image_coordinate_ul_y = (this.viewportCenterY - (this.sideLengthY / 2)) * this.heightMultiplier;
