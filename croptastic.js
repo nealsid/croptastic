@@ -189,10 +189,9 @@ Croptastic.prototype.drawResizeHandle = function (x, y) {
   var croptastic = this;
   /*jslint unparam: true*/
   handle.drag(function (dx, dy, mouseX, mouseY, e) {
-    console.log("inside drag");
     var viewport_ul_x =
           croptastic.viewportElement.matrix.x(croptastic.viewportElement.attrs.path[0][1],
-                                               croptastic.viewportElement.attrs.path[0][2]);
+                                              croptastic.viewportElement.attrs.path[0][2]);
     var viewport_ul_y =
           croptastic.viewportElement.matrix.y(croptastic.viewportElement.attrs.path[0][1],
                                                croptastic.viewportElement.attrs.path[0][2]);
@@ -223,15 +222,6 @@ Croptastic.prototype.drawResizeHandle = function (x, y) {
     viewport_size_dy = mouseY_local - viewport_lr_y;
     console.log("viewport_size_dx: " + viewport_size_dx);
     console.log("viewport_size_dy: " + viewport_size_dy);
-    // dx/dy from Raphael are the changes in x/y from the drag start,
-    // not the most recent change of the mouse.  Since we want to
-    // track the mouse cursor as the user moves it, we need to figure
-    // out the change from the last drag event we got, not the start
-    // of the drag.  We store the last x/y we've received in
-    // Croptastic.last{x,y}, which is the same as what the viewport
-    // drag does, so we're counting on this code and the code inside
-    // the viewport drag never being executed at the same time, as
-    // they would clobber each other's state.
     var newViewportX = viewport_lr_x + viewport_size_dx - viewport_ul_x;
     var newViewportY = viewport_lr_y + viewport_size_dy - viewport_ul_y;
 
@@ -244,7 +234,6 @@ Croptastic.prototype.drawResizeHandle = function (x, y) {
 
     if (newViewportX < croptastic.viewportSizeThreshold) {
       croptastic.scaleViewport(croptastic.viewportSizeThreshold, newViewportY);
-      croptastic.lasty = mouseY;
       croptastic.positionLRResizeHandle();
     } else if (newViewportY < croptastic.viewportSizeThreshold) {
       croptastic.scaleViewport(newViewportX, croptastic.viewportSizeThreshold);
@@ -256,8 +245,6 @@ Croptastic.prototype.drawResizeHandle = function (x, y) {
     croptastic.drawShadeElement();
     croptastic.updatePreview();
   }, function (x, y, e) {
-    // croptastic.lastx = x;
-    // croptastic.lasty = y;
     croptastic.setCursorsForResize();
   }, function (e) {
     croptastic.setCursorsForResizeEnd();
@@ -304,7 +291,15 @@ Croptastic.prototype.drawViewport = function () {
   this.lr_handle = this.drawResizeHandle(innerPolyPoints[2].x - (this.handle_side_length / 2),
                                          innerPolyPoints[2].y - (this.handle_side_length / 2));
 
-  this.ur_handle = this.drawResizeHandle(innerPolyPoints[1].x - (this.handle_side_length / 2), innerPolyPoints[1].y + (this.handle_side_length / 2));
+  this.ur_handle = this.drawResizeHandle(innerPolyPoints[1].x - (this.handle_side_length / 2),
+                                         innerPolyPoints[1].y + (this.handle_side_length / 2));
+
+  // dx/dy from Raphael are the changes in x/y from the drag start,
+  // not the most recent change of the mouse.  Since we want to
+  // track the mouse cursor as the user moves it, we need to figure
+  // out the change from the last drag event we got, not the start
+  // of the drag.  We store the last x/y we've received in
+  // Croptastic.last{x,y}.
   /*jslint unparam: true*/
   this.viewportElement.drag(function (dx, dy, x, y, e) {
     var realDX = (x - croptastic.lastx);
