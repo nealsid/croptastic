@@ -16,6 +16,7 @@ function Croptastic(parentNode, previewNode) {
   // one element when the viewport is dragged by the user.
   this.viewportElementAndHandlesSet = null;
   this.lr_handle = null;
+  this.ur_handle = null;
   this.handle_side_length = 15;
   // The outer element that is shaded, to indicate to users which
   // parts of the image aren't currently included.
@@ -179,19 +180,15 @@ Croptastic.prototype.setCursorsForResizeEnd = function () {
 };
 
 Croptastic.prototype.drawResizeHandle = function (x, y) {
-  if (this.lr_handle !== null) {
-    this.lr_handle.remove();
-    this.lr_handle = null;
-  }
-  var lr_handle_points = this.squareAroundPoint(x,
-                                                y,
-                                                this.handle_side_length);
-  var handle_svg = this.pointsToSVGPolygonString(lr_handle_points);
-  var lr_handle = this.paper.path(handle_svg).attr("fill",
-                                                   "#949393").attr("opacity", ".7");
+  var handle_points = this.squareAroundPoint(x,
+                                             y,
+                                             this.handle_side_length);
+  var handle_svg = this.pointsToSVGPolygonString(handle_points);
+  var handle = this.paper.path(handle_svg).attr("fill",
+                                                "#949393").attr("opacity", ".7");
   var croptastic = this;
   /*jslint unparam: true*/
-  lr_handle.drag(function (dx, dy, mouseX, mouseY, e) {
+  handle.drag(function (dx, dy, mouseX, mouseY, e) {
     console.log("inside drag");
     var viewport_ul_x =
           croptastic.viewportElement.matrix.x(croptastic.viewportElement.attrs.path[0][1],
@@ -251,12 +248,9 @@ Croptastic.prototype.drawResizeHandle = function (x, y) {
       croptastic.positionLRResizeHandle();
     } else if (newViewportY < croptastic.viewportSizeThreshold) {
       croptastic.scaleViewport(newViewportX, croptastic.viewportSizeThreshold);
-//      croptastic.lastx = mouseX;
       croptastic.positionLRResizeHandle();
     } else {
       croptastic.scaleViewport(newViewportX, newViewportY);
-      // croptastic.lastx = mouseX;
-      // croptastic.lasty = mouseY;
       croptastic.positionLRResizeHandle();
     }
     croptastic.drawShadeElement();
@@ -269,8 +263,8 @@ Croptastic.prototype.drawResizeHandle = function (x, y) {
     croptastic.setCursorsForResizeEnd();
   });
   /*jslint unparam: true*/
-  lr_handle.toFront();
-  return lr_handle;
+  handle.toFront();
+  return handle;
 };
 
 Croptastic.prototype.drawViewport = function () {
@@ -297,10 +291,20 @@ Croptastic.prototype.drawViewport = function () {
         croptastic.viewportElement.matrix.y(croptastic.viewportElement.attrs.path[2][1],
                                              croptastic.viewportElement.attrs.path[2][2]);
 
+  if (this.lr_handle !== null) {
+    this.lr_handle.remove();
+    this.lr_handle = null;
+  }
+
+  if (this.ur_handle !== null) {
+    this.ur_handle.remove();
+    this.ur_handle = null;
+  }
   // Draw resize handles.
   this.lr_handle = this.drawResizeHandle(innerPolyPoints[2].x - (this.handle_side_length / 2),
                                          innerPolyPoints[2].y - (this.handle_side_length / 2));
 
+  this.ur_handle = this.drawResizeHandle(innerPolyPoints[1].x - (this.handle_side_length / 2), innerPolyPoints[1].y + (this.handle_side_length / 2));
   /*jslint unparam: true*/
   this.viewportElement.drag(function (dx, dy, x, y, e) {
     var realDX = (x - croptastic.lastx);
@@ -318,10 +322,11 @@ Croptastic.prototype.drawViewport = function () {
   /*jslint unparam: false*/
 
   st = this.paper.set();
-  st.push(this.viewportElement, this.lr_handle);
+  st.push(this.viewportElement, this.lr_handle, this.ur_handle);
   this.viewportElementAndHandlesSet = st;
   this.viewportElement.node.style.cursor = "-webkit-grabbing";
   this.lr_handle.node.style.cursor = "nwse-resize";
+  this.ur_handle.node.style.cursor = "nesw-resize";
 };
 
 Croptastic.prototype.scaleViewport = function (newSideLengthX, newSideLengthY) {
