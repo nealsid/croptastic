@@ -189,6 +189,13 @@ Croptastic.prototype.drawResizeHandle = function (x, y) {
   var croptastic = this;
   /*jslint unparam: true*/
   handle.drag(function (dx, dy, mouseX, mouseY, e) {
+    // There is a UI issue here - by calculating based on the UL of
+    // the LR resize handle, there is a noticable visual artifact when
+    // the user grabs the handle anywhere but the UL of the LR handle
+    // - the handle will "jump" as if the user had grabbed the UL of
+    // the LR.  Much time was spent trying to correct for this but I
+    // had to move onto other things - it definitely should be fixed,
+    // though.
     var viewport_ul_x =
           croptastic.viewportElement.matrix.x(croptastic.viewportElement.attrs.path[0][1],
                                               croptastic.viewportElement.attrs.path[0][2]);
@@ -206,9 +213,9 @@ Croptastic.prototype.drawResizeHandle = function (x, y) {
     var mouseY_local = mouseY - croptastic.yoffset;
 
     var lr_handle_ul_x = croptastic.lr_handle.matrix.x(croptastic.lr_handle.attrs.path[0][1],
-							croptastic.lr_handle.attrs.path[0][2]);
+                                                       croptastic.lr_handle.attrs.path[0][2]);
     var lr_handle_ul_y = croptastic.lr_handle.matrix.y(croptastic.lr_handle.attrs.path[0][1],
-							croptastic.lr_handle.attrs.path[0][2]);
+                                                       croptastic.lr_handle.attrs.path[0][2]);
 
     console.log("lr_handle_ul_x: " + lr_handle_ul_x);
     console.log("lr_handle_ul_y: " + lr_handle_ul_y);
