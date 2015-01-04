@@ -229,23 +229,24 @@ Croptastic.prototype.drawResizeHandle = function (x, y) {
     viewport_size_dy = mouseY_local - viewport_lr_y;
     console.log("viewport_size_dx: " + viewport_size_dx);
     console.log("viewport_size_dy: " + viewport_size_dy);
-    var newViewportX = viewport_lr_x + viewport_size_dx - viewport_ul_x;
-    var newViewportY = viewport_lr_y + viewport_size_dy - viewport_ul_y;
+    var newSideLengthX = viewport_lr_x + viewport_size_dx - viewport_ul_x;
+    var newSideLengthY = viewport_lr_y + viewport_size_dy - viewport_ul_y;;
 
-    console.log("newviewportx: " + newViewportX);
-    console.log("newviewporty: " + newViewportY);
-    if (newViewportX < croptastic.viewportSizeThreshold &&
-        newViewportY < croptastic.viewportSizeThreshold) {
+    console.log("newviewportx: " + newSideLengthX);
+    console.log("newviewporty: " + newSideLengthY);
+    if (newSideLengthX < croptastic.viewportSizeThreshold &&
+        newSideLengthY < croptastic.viewportSizeThreshold) {
       return;
     }
 
-    if (newViewportX < croptastic.viewportSizeThreshold) {
-      croptastic.scaleViewport(croptastic.viewportSizeThreshold, newViewportY);
-    } else if (newViewportY < croptastic.viewportSizeThreshold) {
-      croptastic.scaleViewport(newViewportX, croptastic.viewportSizeThreshold);
-    } else {
-      croptastic.scaleViewport(newViewportX, newViewportY);
+    if (newSideLengthX < croptastic.viewportSizeThreshold) {
+      newSideLengthX = croptastic.viewportSizeThreshold;
+    } else if (newSideLengthY < croptastic.viewportSizeThreshold) {
+      newSideLengthY = croptastic.viewportSizeThreshold;
     }
+
+    croptastic.scaleViewport(newSideLengthX, newSideLengthY,
+                             viewport_ul_x, viewport_ul_y);
     croptastic.positionLRResizeHandle();
     croptastic.positionURResizeHandle();
     croptastic.drawShadeElement();
@@ -330,7 +331,7 @@ Croptastic.prototype.drawViewport = function () {
   this.ur_handle.node.style.cursor = "nesw-resize";
 };
 
-Croptastic.prototype.scaleViewport = function (newSideLengthX, newSideLengthY) {
+Croptastic.prototype.scaleViewport = function (newSideLengthX, newSideLengthY, x, y) {
 
   var multiplierX = newSideLengthX / this.sideLengthX;
   var multiplierY = newSideLengthY / this.sideLengthY;
@@ -338,13 +339,8 @@ Croptastic.prototype.scaleViewport = function (newSideLengthX, newSideLengthY) {
   this.sideLengthX = newSideLengthX;
   this.sideLengthY = newSideLengthY;
 
-  var viewport_ul_x = this.viewportElement.matrix.x(this.viewportElement.attrs.path[0][1],
-                                                    this.viewportElement.attrs.path[0][2]);
-  var viewport_ul_y = this.viewportElement.matrix.y(this.viewportElement.attrs.path[0][1],
-                                                    this.viewportElement.attrs.path[0][2]);
-
   var scaleString = "S" + multiplierX + "," +
-        multiplierY + "," + viewport_ul_x + "," + viewport_ul_y;
+        multiplierY + "," + x + "," + y;
   this.viewportElement.transform("..." + scaleString);
   var newx = this.viewportElement.matrix.x(this.viewportElement.attrs.path[0][1],
                                            this.viewportElement.attrs.path[0][2]);
