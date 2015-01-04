@@ -234,14 +234,13 @@ Croptastic.prototype.drawResizeHandle = function (x, y) {
 
     if (newViewportX < croptastic.viewportSizeThreshold) {
       croptastic.scaleViewport(croptastic.viewportSizeThreshold, newViewportY);
-      croptastic.positionLRResizeHandle();
     } else if (newViewportY < croptastic.viewportSizeThreshold) {
       croptastic.scaleViewport(newViewportX, croptastic.viewportSizeThreshold);
-      croptastic.positionLRResizeHandle();
     } else {
       croptastic.scaleViewport(newViewportX, newViewportY);
-      croptastic.positionLRResizeHandle();
     }
+    croptastic.positionLRResizeHandle();
+    croptastic.positionURResizeHandle();
     croptastic.drawShadeElement();
     croptastic.updatePreview();
   }, function (x, y, e) {
@@ -360,20 +359,42 @@ Croptastic.prototype.moveInnerViewport = function (dx, dy) {
 };
 
 Croptastic.prototype.positionLRResizeHandle = function () {
+  // General algorithm here is to look at the lower right of the
+  // viewport, and subtract the handle side length.  The diffierence
+  // between this new quantity and the original position of the lower
+  // right handle is taken as the transform parameter (specifically,
+  // the upper left corner of the lower right handle).
   var viewport_lr_x =
         this.viewportElement.matrix.x(this.viewportElement.attrs.path[2][1],
                                       this.viewportElement.attrs.path[2][2]);
   var viewport_lr_y =
         this.viewportElement.matrix.y(this.viewportElement.attrs.path[2][1],
                                       this.viewportElement.attrs.path[2][2]);
-  var lr_handle_x = this.lr_handle.matrix.x(this.lr_handle.attrs.path[0][1],
-                                            this.lr_handle.attrs.path[0][2]);
-  var lr_handle_y = this.lr_handle.matrix.y(this.lr_handle.attrs.path[0][1],
-                                            this.lr_handle.attrs.path[0][2]);
-  var dx = viewport_lr_x - this.handle_side_length - lr_handle_x;
-  var dy = viewport_lr_y - this.handle_side_length - lr_handle_y;
+  var lr_handle_ul_x = this.lr_handle.matrix.x(this.lr_handle.attrs.path[0][1],
+                                               this.lr_handle.attrs.path[0][2]);
+  var lr_handle_ul_y = this.lr_handle.matrix.y(this.lr_handle.attrs.path[0][1],
+                                               this.lr_handle.attrs.path[0][2]);
+  var dx = viewport_lr_x - this.handle_side_length - lr_handle_ul_x;
+  var dy = viewport_lr_y - this.handle_side_length - lr_handle_ul_y;
   var xformString = "T" + dx + "," + dy;
   this.lr_handle.transform("..." + xformString);
+};
+
+Croptastic.prototype.positionURResizeHandle = function () {
+  var viewport_ur_x =
+        this.viewportElement.matrix.x(this.viewportElement.attrs.path[1][1],
+                                      this.viewportElement.attrs.path[1][2]);
+  var viewport_ur_y =
+        this.viewportElement.matrix.y(this.viewportElement.attrs.path[1][1],
+                                      this.viewportElement.attrs.path[1][2]);
+  var ur_handle_ll_x = this.ur_handle.matrix.x(this.ur_handle.attrs.path[3][1],
+                                               this.ur_handle.attrs.path[3][2]);
+  var ur_handle_ll_y = this.ur_handle.matrix.y(this.ur_handle.attrs.path[3][1],
+                                               this.ur_handle.attrs.path[3][2]);
+  var dx = viewport_ur_x - this.handle_side_length - ur_handle_ll_x;
+  var dy = viewport_ur_y + this.handle_side_length - ur_handle_ll_y;
+  var xformString = "T" + dx + "," + dy;
+  this.ur_handle.transform("..." + xformString);
 };
 
 Croptastic.prototype.drawShadeElement = function () {
