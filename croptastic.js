@@ -338,25 +338,20 @@ Croptastic.prototype.scaleViewport = function (newSideLengthX, newSideLengthY) {
   this.sideLengthX = newSideLengthX;
   this.sideLengthY = newSideLengthY;
 
-  var viewport_ul = {
-    'x' : this.viewportElement.matrix.x(this.viewportElement.attrs.path[0][1],
-                                      this.viewportElement.attrs.path[0][2]),
-    'y' : this.viewportElement.matrix.y(this.viewportElement.attrs.path[0][1],
-                                      this.viewportElement.attrs.path[0][2])
-  };
+  var viewport_ul_x = this.viewportElement.matrix.x(this.viewportElement.attrs.path[0][1],
+                                                    this.viewportElement.attrs.path[0][2]);
+  var viewport_ul_y = this.viewportElement.matrix.y(this.viewportElement.attrs.path[0][1],
+                                                    this.viewportElement.attrs.path[0][2]);
+
   var scaleString = "S" + multiplierX + "," +
-        multiplierY + "," + viewport_ul.x + "," + viewport_ul.y;
+        multiplierY + "," + viewport_ul_x + "," + viewport_ul_y;
   this.viewportElement.transform("..." + scaleString);
   var newx = this.viewportElement.matrix.x(this.viewportElement.attrs.path[0][1],
                                            this.viewportElement.attrs.path[0][2]);
   var newy = this.viewportElement.matrix.y(this.viewportElement.attrs.path[0][1],
                                            this.viewportElement.attrs.path[0][2]);
-  viewport_ul = {
-    'x' : newx,
-    'y' : newy
-  };
-  this.viewportCenterX = viewport_ul.x + (newSideLengthX / 2);
-  this.viewportCenterY = viewport_ul.y + (newSideLengthY / 2);
+  this.viewportCenterX = newx + (newSideLengthX / 2);
+  this.viewportCenterY = newy + (newSideLengthY / 2);
 };
 
 Croptastic.prototype.moveInnerViewport = function (dx, dy) {
