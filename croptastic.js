@@ -212,13 +212,13 @@ Croptastic.prototype.drawResizeHandle = function (x, y) {
     var mouseX_local = mouseX - croptastic.xoffset;
     var mouseY_local = mouseY - croptastic.yoffset;
 
-    var lr_handle_ul_x = croptastic.lr_handle.matrix.x(croptastic.lr_handle.attrs.path[0][1],
-                                                       croptastic.lr_handle.attrs.path[0][2]);
-    var lr_handle_ul_y = croptastic.lr_handle.matrix.y(croptastic.lr_handle.attrs.path[0][1],
-                                                       croptastic.lr_handle.attrs.path[0][2]);
+    var handle_ul_x = handle.matrix.x(handle.attrs.path[0][1],
+                                      handle.attrs.path[0][2]);
+    var handle_ul_y = handle.matrix.y(handle.attrs.path[0][1],
+                                      handle.attrs.path[0][2]);
 
-    console.log("lr_handle_ul_x: " + lr_handle_ul_x);
-    console.log("lr_handle_ul_y: " + lr_handle_ul_y);
+    console.log("handle_ul_x: " + handle_ul_x);
+    console.log("handle_ul_y: " + handle_ul_y);
 
     console.log("mouseX_local: " + mouseX_local);
     console.log("mouseY_local: " + mouseY_local);
