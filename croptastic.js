@@ -179,6 +179,8 @@ Croptastic.prototype.setCursorsForResizeEnd = function () {
   this.viewportElement.node.style.cursor = this.oldViewportCursor;
 };
 
+// x, y are the coordinates around which the resize handle (which is a
+// square) is centered on.
 Croptastic.prototype.drawResizeHandle = function (x, y) {
   var handle_points = this.squareAroundPoint(x,
                                              y,
@@ -212,14 +214,6 @@ Croptastic.prototype.drawResizeHandle = function (x, y) {
     var mouseX_local = mouseX - croptastic.xoffset;
     var mouseY_local = mouseY - croptastic.yoffset;
 
-    var handle_ul_x = handle.matrix.x(handle.attrs.path[0][1],
-                                      handle.attrs.path[0][2]);
-    var handle_ul_y = handle.matrix.y(handle.attrs.path[0][1],
-                                      handle.attrs.path[0][2]);
-
-    console.log("handle_ul_x: " + handle_ul_x);
-    console.log("handle_ul_y: " + handle_ul_y);
-
     console.log("mouseX_local: " + mouseX_local);
     console.log("mouseY_local: " + mouseY_local);
 
@@ -227,13 +221,9 @@ Croptastic.prototype.drawResizeHandle = function (x, y) {
     var viewport_size_dy = 0;
     viewport_size_dx = mouseX_local - viewport_lr_x;
     viewport_size_dy = mouseY_local - viewport_lr_y;
-    console.log("viewport_size_dx: " + viewport_size_dx);
-    console.log("viewport_size_dy: " + viewport_size_dy);
     var newSideLengthX = viewport_lr_x + viewport_size_dx - viewport_ul_x;
     var newSideLengthY = viewport_lr_y + viewport_size_dy - viewport_ul_y;;
 
-    console.log("newviewportx: " + newSideLengthX);
-    console.log("newviewporty: " + newSideLengthY);
     if (newSideLengthX < croptastic.viewportSizeThreshold &&
         newSideLengthY < croptastic.viewportSizeThreshold) {
       return;
