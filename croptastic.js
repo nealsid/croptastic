@@ -186,8 +186,7 @@ Croptastic.prototype.setCursorsForResizeEnd = function () {
 // we support resizing by dragging an edge of the viewport, rather
 // than a corner)
 Croptastic.prototype.drawResizeHandle = function (center_x, center_y,
-                                                  fixedpoint_x,
-                                                  fixedpoint_y) {
+                                                  fixedpoint_corner_number) {
   var handle_points = this.squareAroundPoint(center_x,
                                              center_y,
                                              this.handle_side_length);
@@ -220,11 +219,14 @@ Croptastic.prototype.drawResizeHandle = function (center_x, center_y,
     var viewport_size_dx = 0;
     var viewport_size_dy = 0;
     var handle_center_x = handle.matrix.x(handle.attrs.path[0][1],
-                                          handle.attrs.path[0][2]) - croptastic.handle_side_length;
+                                          handle.attrs.path[0][2]) - (croptastic.handle_side_length / 2);
     var handle_center_y = handle.matrix.y(handle.attrs.path[0][1],
-                                          handle.attrs.path[0][2]) - croptastic.handle_side_length;
+                                          handle.attrs.path[0][2]) - (croptastic.handle_side_length / 2);
     viewport_size_dx = mouseX_local - handle_center_x;
     viewport_size_dy = mouseY_local - handle_center_y;
+    var fixedpoint = croptastic.viewportCornerCoordinates(fixedpoint_corner_number);
+    var fixedpoint_x = fixedpoint['x'];
+    var fixedpoint_y = fixedpoint['y'];
     var newSideLengthX = Math.abs(handle_center_x + viewport_size_dx - fixedpoint_x);
     var newSideLengthY = Math.abs(handle_center_y + viewport_size_dy - fixedpoint_y);
 
@@ -255,6 +257,24 @@ Croptastic.prototype.drawResizeHandle = function (center_x, center_y,
   return handle;
 };
 
+Croptastic.prototype.viewportCornerCoordinates = function(cornerNumber) {
+  var pathElement = this.viewportElement.attrs.path[cornerNumber];
+  return {
+    'x': this.viewportElement.matrix.x(pathElement[1],
+                                       pathElement[2]),
+    'y': this.viewportElement.matrix.y(pathElement[1],
+                                       pathElement[2])
+  };
+};
+
+Croptastic.prototype.viewportUpperLeft = function () {
+  return this.viewportCornerCoordinates(0);
+};
+
+Croptastic.prototype.viewportLowerLeft = function () {
+  return this.viewportCornerCoordinates(3);
+};
+
 Croptastic.prototype.drawViewport = function () {
   var centerX = this.viewportCenterX;
   var centerY = this.viewportCenterY;
@@ -262,7 +282,6 @@ Croptastic.prototype.drawViewport = function () {
                                                   this.sideLengthX,
                                                   this.sideLengthY);
   var viewportSVG = this.pointsToSVGPolygonString(innerPolyPoints);
-  var croptastic = this;
   var st;
 
   if (this.viewportElement !== null) {
@@ -283,27 +302,28 @@ Croptastic.prototype.drawViewport = function () {
   }
 
   var viewport_ul_x =
-        croptastic.viewportElement.matrix.x(croptastic.viewportElement.attrs.path[0][1],
-                                            croptastic.viewportElement.attrs.path[0][2]);
+        this.viewportElement.matrix.x(this.viewportElement.attrs.path[0][1],
+                                      this.viewportElement.attrs.path[0][2]);
   var viewport_ul_y =
-        croptastic.viewportElement.matrix.y(croptastic.viewportElement.attrs.path[0][1],
-                                            croptastic.viewportElement.attrs.path[0][2]);
+        this.viewportElement.matrix.y(this.viewportElement.attrs.path[0][1],
+                                      this.viewportElement.attrs.path[0][2]);
 
   var viewport_ll_x =
-        croptastic.viewportElement.matrix.x(croptastic.viewportElement.attrs.path[3][1],
-                                            croptastic.viewportElement.attrs.path[3][2]);
+        this.viewportElement.matrix.x(this.viewportElement.attrs.path[3][1],
+                                      this.viewportElement.attrs.path[3][2]);
   var viewport_ll_y =
-        croptastic.viewportElement.matrix.y(croptastic.viewportElement.attrs.path[3][1],
-                                            croptastic.viewportElement.attrs.path[3][2]);
+        this.viewportElement.matrix.y(this.viewportElement.attrs.path[3][1],
+                                      this.viewportElement.attrs.path[3][2]);
   // Draw resize handles.
   this.lr_handle = this.drawResizeHandle(innerPolyPoints[2].x - (this.handle_side_length / 2),
                                          innerPolyPoints[2].y - (this.handle_side_length / 2),
-                                         viewport_ul_x, viewport_ul_y);
+                                         0);
 
   this.ur_handle = this.drawResizeHandle(innerPolyPoints[1].x - (this.handle_side_length / 2),
                                          innerPolyPoints[1].y + (this.handle_side_length / 2),
-                                         viewport_ll_x, viewport_ll_y);
+                                         3);
 
+  var croptastic = this;
   // dx/dy from Raphael are the changes in x/y from the drag start,
   // not the most recent change of the mouse.  Since we want to
   // track the mouse cursor as the user moves it, we need to figure
