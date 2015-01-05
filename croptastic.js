@@ -267,14 +267,6 @@ Croptastic.prototype.viewportCornerCoordinates = function(cornerNumber) {
   };
 };
 
-Croptastic.prototype.viewportUpperLeft = function () {
-  return this.viewportCornerCoordinates(0);
-};
-
-Croptastic.prototype.viewportLowerLeft = function () {
-  return this.viewportCornerCoordinates(3);
-};
-
 Croptastic.prototype.drawViewport = function () {
   var centerX = this.viewportCenterX;
   var centerY = this.viewportCenterY;
@@ -301,19 +293,14 @@ Croptastic.prototype.drawViewport = function () {
     this.ur_handle = null;
   }
 
-  var viewport_ul_x =
-        this.viewportElement.matrix.x(this.viewportElement.attrs.path[0][1],
-                                      this.viewportElement.attrs.path[0][2]);
-  var viewport_ul_y =
-        this.viewportElement.matrix.y(this.viewportElement.attrs.path[0][1],
-                                      this.viewportElement.attrs.path[0][2]);
+  var viewport_ul = this.viewportCornerCoordinates(0);
+  var viewport_ul_x = viewport_ul['x'];
+  var viewport_ul_y = viewport_ul['y'];
 
-  var viewport_ll_x =
-        this.viewportElement.matrix.x(this.viewportElement.attrs.path[3][1],
-                                      this.viewportElement.attrs.path[3][2]);
-  var viewport_ll_y =
-        this.viewportElement.matrix.y(this.viewportElement.attrs.path[3][1],
-                                      this.viewportElement.attrs.path[3][2]);
+  var viewport_ll = this.viewportCornerCoordinates(3);
+  var viewport_ll_x = viewport_ll['x'];
+  var viewport_ll_y = viewport_ll['y'];
+
   // Draw resize handles.
   this.lr_handle = this.drawResizeHandle(innerPolyPoints[2].x - (this.handle_side_length / 2),
                                          innerPolyPoints[2].y - (this.handle_side_length / 2),
@@ -365,10 +352,9 @@ Croptastic.prototype.scaleViewport = function (newSideLengthX, newSideLengthY, x
   var scaleString = "S" + multiplierX + "," +
         multiplierY + "," + x + "," + y;
   this.viewportElement.transform("..." + scaleString);
-  var newx = this.viewportElement.matrix.x(this.viewportElement.attrs.path[0][1],
-                                           this.viewportElement.attrs.path[0][2]);
-  var newy = this.viewportElement.matrix.y(this.viewportElement.attrs.path[0][1],
-                                           this.viewportElement.attrs.path[0][2]);
+  var new_point = this.viewportCornerCoordinates(0);
+  var newx = new_point['x'];
+  var newy = new_point['y'];
   this.viewportCenterX = newx + (newSideLengthX / 2);
   this.viewportCenterY = newy + (newSideLengthY / 2);
 };
@@ -385,12 +371,10 @@ Croptastic.prototype.positionLRResizeHandle = function () {
   // between this new quantity and the original position of the lower
   // right handle is taken as the transform parameter (specifically,
   // the upper left corner of the lower right handle).
-  var viewport_lr_x =
-        this.viewportElement.matrix.x(this.viewportElement.attrs.path[2][1],
-                                      this.viewportElement.attrs.path[2][2]);
-  var viewport_lr_y =
-        this.viewportElement.matrix.y(this.viewportElement.attrs.path[2][1],
-                                      this.viewportElement.attrs.path[2][2]);
+  var viewport_lr = this.viewportCornerCoordinates(2);
+  var viewport_lr_x = viewport_lr['x'];
+  var viewport_lr_y = viewport_lr['y'];
+
   var lr_handle_ul_x = this.lr_handle.matrix.x(this.lr_handle.attrs.path[0][1],
                                                this.lr_handle.attrs.path[0][2]);
   var lr_handle_ul_y = this.lr_handle.matrix.y(this.lr_handle.attrs.path[0][1],
@@ -402,12 +386,9 @@ Croptastic.prototype.positionLRResizeHandle = function () {
 };
 
 Croptastic.prototype.positionURResizeHandle = function () {
-  var viewport_ur_x =
-        this.viewportElement.matrix.x(this.viewportElement.attrs.path[1][1],
-                                      this.viewportElement.attrs.path[1][2]);
-  var viewport_ur_y =
-        this.viewportElement.matrix.y(this.viewportElement.attrs.path[1][1],
-                                      this.viewportElement.attrs.path[1][2]);
+  var viewport_ur = this.viewportCornerCoordinates(1);
+  var viewport_ur_x = viewport_ur['x'];
+  var viewport_ur_y = viewport_ur['y'];
   var ur_handle_ll_x = this.ur_handle.matrix.x(this.ur_handle.attrs.path[3][1],
                                                this.ur_handle.attrs.path[3][2]);
   var ur_handle_ll_y = this.ur_handle.matrix.y(this.ur_handle.attrs.path[3][1],
