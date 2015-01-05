@@ -180,8 +180,11 @@ Croptastic.prototype.setCursorsForResizeEnd = function () {
 };
 
 // x, y are the coordinates around which the resize handle (which is a
-// square) is centered on.
-
+// square) is centered on.  fixedpoint_{x,y} is the point that remains
+// stationary while a resize handle is being dragged - usually it's
+// the opposite corner, but in the future it could be two of them (if
+// we support resizing by dragging an edge of the viewport, rather
+// than a corner)
 Croptastic.prototype.drawResizeHandle = function (center_x, center_y,
                                                   fixedpoint_x,
                                                   fixedpoint_y) {
@@ -216,8 +219,12 @@ Croptastic.prototype.drawResizeHandle = function (center_x, center_y,
 
     var viewport_size_dx = 0;
     var viewport_size_dy = 0;
-    viewport_size_dx = mouseX_local - center_x;
-    viewport_size_dy = mouseY_local - center_y;
+    var handle_center_x = handle.matrix.x(handle.attrs.path[0][1],
+                                          handle.attrs.path[0][2]) - croptastic.handle_side_length;
+    var handle_center_y = handle.matrix.y(handle.attrs.path[0][1],
+                                          handle.attrs.path[0][2]) - croptastic.handle_side_length;
+    viewport_size_dx = mouseX_local - handle_center_x;
+    viewport_size_dy = mouseY_local - handle_center_y;
     var newSideLengthX = Math.abs(center_x + viewport_size_dx - fixedpoint_x);
     var newSideLengthY = Math.abs(center_y + viewport_size_dy - fixedpoint_y);
 
