@@ -225,8 +225,8 @@ Croptastic.prototype.drawResizeHandle = function (center_x, center_y,
                                           handle.attrs.path[0][2]) - croptastic.handle_side_length;
     viewport_size_dx = mouseX_local - handle_center_x;
     viewport_size_dy = mouseY_local - handle_center_y;
-    var newSideLengthX = Math.abs(center_x + viewport_size_dx - fixedpoint_x);
-    var newSideLengthY = Math.abs(center_y + viewport_size_dy - fixedpoint_y);
+    var newSideLengthX = Math.abs(handle_center_x + viewport_size_dx - fixedpoint_x);
+    var newSideLengthY = Math.abs(handle_center_y + viewport_size_dy - fixedpoint_y);
 
     if (newSideLengthX < croptastic.viewportSizeThreshold &&
         newSideLengthY < croptastic.viewportSizeThreshold) {
