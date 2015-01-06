@@ -181,11 +181,13 @@ Croptastic.prototype.setCursorsForResizeEnd = function () {
 };
 
 // x, y are the coordinates around which the resize handle (which is a
-// square) is centered on.  fixedpoint_{x,y} is the point that remains
-// stationary while a resize handle is being dragged - usually it's
-// the opposite corner, but in the future it could be two of them (if
-// we support resizing by dragging an edge of the viewport, rather
-// than a corner)
+// square) is centered on.  fixedpoint_corner_nmber is the corner
+// number that remains stationary while a resize handle is being
+// dragged - usually it's the opposite corner, but in the future it
+// could be two of them (if we support resizing by dragging an edge of
+// the viewport, rather than a corner).  The SVG polygons are drawn in
+// clockwise order, to the numbering for corners is 0-3 for UL, UR,
+// LR, LL (according to Raphael).
 Croptastic.prototype.drawResizeHandle = function (center_x, center_y,
                                                   fixedpoint_corner_number) {
   var handle_points = this.squareAroundPoint(center_x,
@@ -197,14 +199,6 @@ Croptastic.prototype.drawResizeHandle = function (center_x, center_y,
   var croptastic = this;
   /*jslint unparam: true*/
   handle.drag(function (dx, dy, mouseX, mouseY, e) {
-    // There is a UI issue here - by calculating based on the center
-    // of the resize handle, there is a noticable visual artifact when
-    // the user grabs the handle anywhere but the center of the handle
-    // - the handle will "jump" as if the user had grabbed the center
-    // of the LR.  Much time was spent trying to correct for this but
-    // I had to move onto other things - it definitely should be
-    // fixed, though.
-
     // Convert mouse coordinates from browser (which are in the
     // browser window coordinates) to paper/picture coordinates,
     // which is what Raphael expects.
@@ -216,6 +210,13 @@ Croptastic.prototype.drawResizeHandle = function (center_x, center_y,
 
     var viewport_size_dx = 0;
     var viewport_size_dy = 0;
+    // There is a UI issue here - by calculating based on the center
+    // of the resize handle, there is a noticable visual artifact when
+    // the user grabs the handle anywhere but the center of the handle
+    // - the handle will "jump" as if the user had grabbed the center
+    // of the LR.  Much time was spent trying to correct for this but
+    // I had to move onto other things - it definitely should be
+    // fixed, though.
     var handle_center_x = handle.matrix.x(handle.attrs.path[0][1],
                                           handle.attrs.path[0][2]) - (croptastic.handle_side_length / 2);
     var handle_center_y = handle.matrix.y(handle.attrs.path[0][1],
@@ -228,11 +229,15 @@ Croptastic.prototype.drawResizeHandle = function (center_x, center_y,
     var newSideLengthX = Math.abs(handle_center_x + viewport_size_dx - fixedpoint_x);
     var newSideLengthY = Math.abs(handle_center_y + viewport_size_dy - fixedpoint_y);
 
+    // Prevent resize if the user has dragged the viewport to be too
+    // small in both dimensions.
     if (newSideLengthX < croptastic.viewportSizeThreshold &&
         newSideLengthY < croptastic.viewportSizeThreshold) {
       return;
     }
 
+    // If the user has only hit the minimum in one dimension, we can
+    // still resize in the other dimension.
     if (newSideLengthX < croptastic.viewportSizeThreshold) {
       newSideLengthX = croptastic.viewportSizeThreshold;
     } else if (newSideLengthY < croptastic.viewportSizeThreshold) {
