@@ -88,7 +88,7 @@ Croptastic.prototype.updatePreview = function () {
     // and naturalWidth,naturalHeight (resp) are the same.
     this.widthMultiplier =
       this.imageForRaphaelSVGImage.width / this.svgImage.attr("width");
-    if (this.widthMultiplier == 0) {
+    if (this.widthMultiplier === 0) {
       this.widthMultiplier = null;
       return;
     }
@@ -100,7 +100,7 @@ Croptastic.prototype.updatePreview = function () {
   if (this.heightMultiplier === null) {
     this.heightMultiplier =
       this.imageForRaphaelSVGImage.height / this.svgImage.attr("height");
-    if (this.heightMultiplier == 0) {
+    if (this.heightMultiplier === 0) {
       this.heightMultiplier = null;
       return;
     }
@@ -161,7 +161,6 @@ Croptastic.prototype.rectangleAroundPoint = function (x, y, sideLengthX, sideLen
 // length sideLength around (x,y).  The points are returned in
 // clockwise order starting from the upper left.
 Croptastic.prototype.squareAroundPoint = function (x, y, sideLength) {
-  var halfSideLength = sideLength / 2;
   return this.rectangleAroundPoint(x, y, sideLength, sideLength);
 };
 
@@ -224,8 +223,8 @@ Croptastic.prototype.drawResizeHandle = function (center_x, center_y,
     viewport_size_dx = mouseX_local - handle_center_x;
     viewport_size_dy = mouseY_local - handle_center_y;
     var fixedpoint = croptastic.viewportCornerCoordinates(fixedpoint_corner_number);
-    var fixedpoint_x = fixedpoint['x'];
-    var fixedpoint_y = fixedpoint['y'];
+    var fixedpoint_x = fixedpoint.x;
+    var fixedpoint_y = fixedpoint.y;
     var newSideLengthX = Math.abs(handle_center_x + viewport_size_dx - fixedpoint_x);
     var newSideLengthY = Math.abs(handle_center_y + viewport_size_dy - fixedpoint_y);
 
@@ -261,7 +260,7 @@ Croptastic.prototype.drawResizeHandle = function (center_x, center_y,
   return handle;
 };
 
-Croptastic.prototype.viewportCornerCoordinates = function(cornerNumber) {
+Croptastic.prototype.viewportCornerCoordinates = function (cornerNumber) {
   var pathElement = this.viewportElement.attrs.path[cornerNumber];
   return {
     'x': this.viewportElement.matrix.x(pathElement[1],
@@ -301,14 +300,6 @@ Croptastic.prototype.drawViewport = function () {
     this.ur_handle.remove();
     this.ur_handle = null;
   }
-
-  var viewport_ul = this.viewportCornerCoordinates(0);
-  var viewport_ul_x = viewport_ul['x'];
-  var viewport_ul_y = viewport_ul['y'];
-
-  var viewport_ll = this.viewportCornerCoordinates(3);
-  var viewport_ll_x = viewport_ll['x'];
-  var viewport_ll_y = viewport_ll['y'];
 
   // Draw resize handles.
   this.ul_handle = this.drawResizeHandle(innerPolyPoints[0].x + (this.handle_side_length / 2),
@@ -368,8 +359,8 @@ Croptastic.prototype.scaleViewport = function (newSideLengthX, newSideLengthY, x
         multiplierY + "," + x + "," + y;
   this.viewportElement.transform("..." + scaleString);
   var new_point = this.viewportCornerCoordinates(0);
-  var newx = new_point['x'];
-  var newy = new_point['y'];
+  var newx = new_point.x;
+  var newy = new_point.y;
   this.viewportCenterX = newx + (newSideLengthX / 2);
   this.viewportCenterY = newy + (newSideLengthY / 2);
 };
@@ -382,13 +373,13 @@ Croptastic.prototype.moveInnerViewport = function (dx, dy) {
 
 Croptastic.prototype.positionLRResizeHandle = function () {
   // General algorithm here is to look at the lower right of the
-  // viewport, and subtract the handle side length.  The diffierence
+  // viewport, and subtract the handle side length.  The difference
   // between this new quantity and the original position of the lower
   // right handle is taken as the transform parameter (specifically,
   // the upper left corner of the lower right handle).
   var viewport_lr = this.viewportCornerCoordinates(2);
-  var viewport_lr_x = viewport_lr['x'];
-  var viewport_lr_y = viewport_lr['y'];
+  var viewport_lr_x = viewport_lr.x;
+  var viewport_lr_y = viewport_lr.y;
 
   var lr_handle_ul_x = this.lr_handle.matrix.x(this.lr_handle.attrs.path[0][1],
                                                this.lr_handle.attrs.path[0][2]);
@@ -402,8 +393,8 @@ Croptastic.prototype.positionLRResizeHandle = function () {
 
 Croptastic.prototype.positionULResizeHandle = function () {
   var viewport_ul = this.viewportCornerCoordinates(0);
-  var viewport_ul_x = viewport_ul['x'];
-  var viewport_ul_y = viewport_ul['y'];
+  var viewport_ul_x = viewport_ul.x;
+  var viewport_ul_y = viewport_ul.y;
   var ul_handle_lr_x = this.ul_handle.matrix.x(this.ul_handle.attrs.path[2][1],
                                                this.ul_handle.attrs.path[2][2]);
   var ul_handle_lr_y = this.ul_handle.matrix.y(this.ul_handle.attrs.path[2][1],
@@ -416,8 +407,8 @@ Croptastic.prototype.positionULResizeHandle = function () {
 
 Croptastic.prototype.positionURResizeHandle = function () {
   var viewport_ur = this.viewportCornerCoordinates(1);
-  var viewport_ur_x = viewport_ur['x'];
-  var viewport_ur_y = viewport_ur['y'];
+  var viewport_ur_x = viewport_ur.x;
+  var viewport_ur_y = viewport_ur.y;
   var ur_handle_ll_x = this.ur_handle.matrix.x(this.ur_handle.attrs.path[3][1],
                                                this.ur_handle.attrs.path[3][2]);
   var ur_handle_ll_y = this.ur_handle.matrix.y(this.ur_handle.attrs.path[3][1],
