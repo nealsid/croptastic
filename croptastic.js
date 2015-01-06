@@ -144,17 +144,19 @@ Croptastic.prototype.pointsToSVGPolygonString = function (points) {
 Croptastic.prototype.rectangleAroundPoint = function (x, y, sideLengthX, sideLengthY) {
   var halfXSideLength = sideLengthX / 2;
   var halfYSideLength = sideLengthY / 2;
-  return [{'x' : x - halfXSideLength,   // upper left
-           'y' : y - halfYSideLength},
+  return [
+    {'x' : x - halfXSideLength,   // upper left
+     'y' : y - halfYSideLength},
 
-          {'x' : x + halfXSideLength,   // upper right
-           'y' : y - halfYSideLength},
+    {'x' : x + halfXSideLength,   // upper right
+     'y' : y - halfYSideLength},
 
-          {'x' : x + halfXSideLength,   // lower right
-           'y' : y + halfYSideLength},
+    {'x' : x + halfXSideLength,   // lower right
+     'y' : y + halfYSideLength},
 
-          {'x' : x - halfXSideLength,   // lower left
-           'y' : y + halfYSideLength}];
+    {'x' : x - halfXSideLength,   // lower left
+     'y' : y + halfYSideLength}
+  ];
 };
 
 // Returns an array of points that represent a square with sides
@@ -204,9 +206,6 @@ Croptastic.prototype.drawResizeHandle = function (center_x, center_y,
     var mouseX_local = mouseX - croptastic.xoffset;
     var mouseY_local = mouseY - croptastic.yoffset;
 
-    console.log("mouseX_local: " + mouseX_local);
-    console.log("mouseY_local: " + mouseY_local);
-
     var viewport_size_dx = 0;
     var viewport_size_dy = 0;
     // There is a UI issue here - by calculating based on the center
@@ -248,6 +247,10 @@ Croptastic.prototype.drawResizeHandle = function (center_x, center_y,
     croptastic.positionLRResizeHandle();
     croptastic.positionURResizeHandle();
     croptastic.positionULResizeHandle();
+
+    // croptastic.positionResizeHandle(croptastic.ul_handle, 0, 2);
+    // croptastic.positionResizeHandle(croptastic.ur_handle, 1, 3);
+    // croptastic.positionResizeHandle(croptastic.lr_handle, 2, 0);
     croptastic.drawShadeElement();
     croptastic.updatePreview();
   }, function (x, y, e) {
@@ -371,6 +374,31 @@ Croptastic.prototype.moveInnerViewport = function (dx, dy) {
   this.updatePreview();
 };
 
+Croptastic.prototype.positionResizeHandle = function(handle,
+                                                     corner,
+                                                     fixed_corner_num) {
+  // General algorithm here is to look at the outer corner of the
+  // viewport, and subtract the handle side length.  The difference
+  // between this new quantity and the original position of the
+  // opposite corner of handle is taken as the transform parameter.
+  var corner_point = this.viewportCornerCoordinates(corner);
+  var corner_x = corner_point.x;
+  var corner_y = corner_point.y;
+  console.log("drag corner x: " + corner_x);
+  console.log("drag corner y: " + corner_y);
+  var handle_fixed_point_x = handle.matrix.x(handle.attrs.path[fixed_corner_num][1],
+                                             handle.attrs.path[fixed_corner_num][2]);
+  var handle_fixed_point_y = handle.matrix.y(handle.attrs.path[fixed_corner_num][1],
+                                             handle.attrs.path[fixed_corner_num][2]);
+  var point_distance_x = corner_x - handle_fixed_point_x;
+  var point_distance_y = corner_y - handle_fixed_point_y;
+  var dx = point_distance_x - this.handle_side_length;
+  var dy = point_distance_y - this.handle_side_length;
+  var xformString = "T" + dx + "," + dy;
+  console.log(xformString);
+  handle.transform("..." + xformString);
+};
+
 Croptastic.prototype.positionLRResizeHandle = function () {
   // General algorithm here is to look at the lower right of the
   // viewport, and subtract the handle side length.  The difference
@@ -409,6 +437,8 @@ Croptastic.prototype.positionURResizeHandle = function () {
   var viewport_ur = this.viewportCornerCoordinates(1);
   var viewport_ur_x = viewport_ur.x;
   var viewport_ur_y = viewport_ur.y;
+  console.log("UR corner x: " + viewport_ur_x);
+  console.log("UR corner y: " + viewport_ur_y);
   var ur_handle_ll_x = this.ur_handle.matrix.x(this.ur_handle.attrs.path[3][1],
                                                this.ur_handle.attrs.path[3][2]);
   var ur_handle_ll_y = this.ur_handle.matrix.y(this.ur_handle.attrs.path[3][1],
