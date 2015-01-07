@@ -16,8 +16,9 @@ function Croptastic(parentNode, previewNode) {
   // one element when the viewport is dragged by the user.
   this.viewportElementAndHandlesSet = null;
   this.ul_handle = null;
-  this.lr_handle = null;
   this.ur_handle = null;
+  this.lr_handle = null;
+  this.ll_handle = null;
   this.handle_side_length = 15;
   // The outer element that is shaded, to indicate to users which
   // parts of the image aren't currently included.
@@ -244,12 +245,12 @@ Croptastic.prototype.drawResizeHandle = function (center_x, center_y,
 
     croptastic.scaleViewport(newSideLengthX, newSideLengthY,
                              fixedpoint_x, fixedpoint_y);
-    croptastic.positionLRResizeHandle();
-    croptastic.positionURResizeHandle();
     croptastic.positionULResizeHandle();
+    croptastic.positionURResizeHandle();
+    croptastic.positionLRResizeHandle();
+    croptastic.positionLLResizeHandle();
 
     // croptastic.positionResizeHandle(croptastic.ul_handle, 0, 2);
-    // croptastic.positionResizeHandle(croptastic.ur_handle, 1, 3);
     // croptastic.positionResizeHandle(croptastic.lr_handle, 2, 0);
     croptastic.drawShadeElement();
     croptastic.updatePreview();
@@ -294,14 +295,19 @@ Croptastic.prototype.drawViewport = function () {
     this.ul_handle = null;
   }
 
+  if (this.ur_handle !== null) {
+    this.ur_handle.remove();
+    this.ur_handle = null;
+  }
+
   if (this.lr_handle !== null) {
     this.lr_handle.remove();
     this.lr_handle = null;
   }
 
-  if (this.ur_handle !== null) {
-    this.ur_handle.remove();
-    this.ur_handle = null;
+  if (this.ll_handle !== null) {
+    this.ll_handle.remove();
+    this.ll_handle = null;
   }
 
   // Draw resize handles.
@@ -316,6 +322,10 @@ Croptastic.prototype.drawViewport = function () {
   this.lr_handle = this.drawResizeHandle(innerPolyPoints[2].x - (this.handle_side_length / 2),
                                          innerPolyPoints[2].y - (this.handle_side_length / 2),
                                          0);
+
+  this.ll_handle = this.drawResizeHandle(innerPolyPoints[3].x + (this.handle_side_length / 2),
+                                         innerPolyPoints[3].y - (this.handle_side_length / 2),
+                                         1);
 
   var croptastic = this;
   // dx/dy from Raphael are the changes in x/y from the drag start,
@@ -341,13 +351,14 @@ Croptastic.prototype.drawViewport = function () {
   /*jslint unparam: false*/
 
   st = this.paper.set();
-  st.push(this.viewportElement, this.ul_handle, this.ur_handle, this.lr_handle);
+  st.push(this.viewportElement, this.ul_handle, this.ur_handle, this.lr_handle, this.ll_handle);
   this.viewportElementAndHandlesSet = st;
   $(this.viewportElement.node).css("cursor", "-webkit-grabbing");
   $(this.viewportElement.node).css("cursor", "-moz-grabbing");
-  this.lr_handle.node.style.cursor = "nwse-resize";
   this.ul_handle.node.style.cursor = "nwse-resize";
   this.ur_handle.node.style.cursor = "nesw-resize";
+  this.lr_handle.node.style.cursor = "nwse-resize";
+  this.ll_handle.node.style.cursor = "nesw-resize";
 };
 
 Croptastic.prototype.scaleViewport = function (newSideLengthX, newSideLengthY, x, y) {
@@ -390,33 +401,32 @@ Croptastic.prototype.positionResizeHandle = function(handle,
                                              handle.attrs.path[fixed_corner_num][2]);
   var handle_fixed_point_y = handle.matrix.y(handle.attrs.path[fixed_corner_num][1],
                                              handle.attrs.path[fixed_corner_num][2]);
-  var point_distance_x = corner_x - handle_fixed_point_x;
-  var point_distance_y = corner_y - handle_fixed_point_y;
-  var dx = point_distance_x - this.handle_side_length;
-  var dy = point_distance_y - this.handle_side_length;
+  var point_distance_x = Math.abs(corner_x - handle_fixed_point_x);
+  var point_distance_y = Math.abs(corner_y - handle_fixed_point_y);
+  // we need to figure out if the user is dragging the handle "inward"
+  // or "outward", where inward/outward means towards or away from the
+  // center of the viewport.
+  var inward = false;
+  var dx = null;
+  var dy = null;
+  if (corner_x < handle_fixed_point_x) {
+    // we're on the left side of the viewport
+    dx = this.handle_side_length - point_distance_x;
+  } else {
+    // we're on the right side of the viewport
+    dx = point_distance_x - this.handle_side_length;
+  }
+
+  if (corner_y < handle_fixed_point_y) {
+    // top of viewport
+    dy = this.handle_side_length - point_distance_y;
+  } else {
+    // bottom of viewport
+    dy = point_distance_y - this.handle_side_length;
+  }
   var xformString = "T" + dx + "," + dy;
   console.log(xformString);
   handle.transform("..." + xformString);
-};
-
-Croptastic.prototype.positionLRResizeHandle = function () {
-  // General algorithm here is to look at the lower right of the
-  // viewport, and subtract the handle side length.  The difference
-  // between this new quantity and the original position of the lower
-  // right handle is taken as the transform parameter (specifically,
-  // the upper left corner of the lower right handle).
-  var viewport_lr = this.viewportCornerCoordinates(2);
-  var viewport_lr_x = viewport_lr.x;
-  var viewport_lr_y = viewport_lr.y;
-
-  var lr_handle_ul_x = this.lr_handle.matrix.x(this.lr_handle.attrs.path[0][1],
-                                               this.lr_handle.attrs.path[0][2]);
-  var lr_handle_ul_y = this.lr_handle.matrix.y(this.lr_handle.attrs.path[0][1],
-                                               this.lr_handle.attrs.path[0][2]);
-  var dx = viewport_lr_x - this.handle_side_length - lr_handle_ul_x;
-  var dy = viewport_lr_y - this.handle_side_length - lr_handle_ul_y;
-  var xformString = "T" + dx + "," + dy;
-  this.lr_handle.transform("..." + xformString);
 };
 
 Croptastic.prototype.positionULResizeHandle = function () {
@@ -447,6 +457,41 @@ Croptastic.prototype.positionURResizeHandle = function () {
   var dy = viewport_ur_y + this.handle_side_length - ur_handle_ll_y;
   var xformString = "T" + dx + "," + dy;
   this.ur_handle.transform("..." + xformString);
+};
+
+Croptastic.prototype.positionLRResizeHandle = function () {
+  // General algorithm here is to look at the lower right of the
+  // viewport, and subtract the handle side length.  The difference
+  // between this new quantity and the original position of the lower
+  // right handle is taken as the transform parameter (specifically,
+  // the upper left corner of the lower right handle).
+  var viewport_lr = this.viewportCornerCoordinates(2);
+  var viewport_lr_x = viewport_lr.x;
+  var viewport_lr_y = viewport_lr.y;
+
+  var lr_handle_ul_x = this.lr_handle.matrix.x(this.lr_handle.attrs.path[0][1],
+                                               this.lr_handle.attrs.path[0][2]);
+  var lr_handle_ul_y = this.lr_handle.matrix.y(this.lr_handle.attrs.path[0][1],
+                                               this.lr_handle.attrs.path[0][2]);
+  var dx = viewport_lr_x - this.handle_side_length - lr_handle_ul_x;
+  var dy = viewport_lr_y - this.handle_side_length - lr_handle_ul_y;
+  var xformString = "T" + dx + "," + dy;
+  this.lr_handle.transform("..." + xformString);
+};
+
+Croptastic.prototype.positionLLResizeHandle = function () {
+  var viewport_ll = this.viewportCornerCoordinates(3);
+  var viewport_ll_x = viewport_ll.x;
+  var viewport_ll_y = viewport_ll.y;
+
+  var ll_handle_ur_x = this.ll_handle.matrix.x(this.ll_handle.attrs.path[1][1],
+                                               this.ll_handle.attrs.path[1][2]);
+  var ll_handle_ur_y = this.ll_handle.matrix.y(this.ll_handle.attrs.path[1][1],
+                                               this.ll_handle.attrs.path[1][2]);
+  var dx = viewport_ll_x + this.handle_side_length - ll_handle_ur_x;
+  var dy = viewport_ll_y - this.handle_side_length - ll_handle_ur_y;
+  var xformString = "T" + dx + "," + dy;
+  this.ll_handle.transform("..." + xformString);
 };
 
 Croptastic.prototype.drawShadeElement = function () {
