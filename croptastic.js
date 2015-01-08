@@ -19,6 +19,7 @@ function Croptastic(parentNode, previewNode) {
   this.ur_handle = null;
   this.lr_handle = null;
   this.ll_handle = null;
+  this.right_handle = null;
   this.handle_side_length = 15;
   // The outer element that is shaded, to indicate to users which
   // parts of the image aren't currently included.
@@ -184,12 +185,13 @@ Croptastic.prototype.setCursorsForResizeEnd = function () {
 
 // x, y are the coordinates around which the resize handle (which is a
 // square) is centered on.  fixedpoint_corner_nmber is the corner
-// number that remains stationary while a resize handle is being
-// dragged - usually it's the opposite corner, but in the future it
-// could be two of them (if we support resizing by dragging an edge of
-// the viewport, rather than a corner).  The SVG polygons are drawn in
-// clockwise order, to the numbering for corners is 0-3 for UL, UR,
-// LR, LL (according to Raphael).
+// number that remains stationary (or, the origin as Raphael refers to
+// it) while a resize handle is being dragged - usually it's the
+// opposite corner, but in the future it could be two of them (if we
+// support resizing by dragging an edge of the viewport, rather than a
+// corner).  The SVG polygons are drawn in clockwise order, to the
+// numbering for corners is 0-3 for UL, UR, LR, LL (according to
+// Raphael).
 Croptastic.prototype.drawResizeHandle = function (center_x, center_y,
                                                   fixedpoint_corner_number) {
   var handle_points = this.squareAroundPoint(center_x,
@@ -202,8 +204,8 @@ Croptastic.prototype.drawResizeHandle = function (center_x, center_y,
   /*jslint unparam: true*/
   handle.drag(function (dx, dy, mouseX, mouseY, e) {
     // Convert mouse coordinates from browser (which are in the
-    // browser window coordinates) to paper/picture coordinates,
-    // which is what Raphael expects.
+    // browser window coordinates) to paper/picture coordinates, which
+    // is what Raphael expects.
     var mouseX_local = mouseX - croptastic.xoffset;
     var mouseY_local = mouseY - croptastic.yoffset;
 
@@ -255,6 +257,11 @@ Croptastic.prototype.drawResizeHandle = function (center_x, center_y,
     croptastic.drawShadeElement();
     croptastic.updatePreview();
   }, function (x, y, e) {
+    // We want the handle the user is dragging to move to the front,
+    // because if the user drags over another resize handle, we want
+    // our cursor to still be shown.
+    handle.toFront();
+
     croptastic.setCursorsForResize(handle.node.style.cursor);
   }, function (e) {
     croptastic.setCursorsForResizeEnd();
@@ -281,8 +288,6 @@ Croptastic.prototype.drawViewport = function () {
                                                   this.sideLengthX,
                                                   this.sideLengthY);
   var viewportSVG = this.pointsToSVGPolygonString(innerPolyPoints);
-  var st;
-
   if (this.viewportElement !== null) {
     this.viewportElement.remove();
     this.viewportElement = null;
@@ -310,6 +315,11 @@ Croptastic.prototype.drawViewport = function () {
     this.ll_handle = null;
   }
 
+  if (this.right_handle !== null) {
+    this.right_handle.remove();
+    this.right_handle = null;
+  }
+
   // Draw resize handles.
   this.ul_handle = this.drawResizeHandle(innerPolyPoints[0].x + (this.handle_side_length / 2),
                                          innerPolyPoints[0].y + (this.handle_side_length / 2),
@@ -326,6 +336,8 @@ Croptastic.prototype.drawViewport = function () {
   this.ll_handle = this.drawResizeHandle(innerPolyPoints[3].x + (this.handle_side_length / 2),
                                          innerPolyPoints[3].y - (this.handle_side_length / 2),
                                          1);
+
+  this.right_handle = this.drawResizeHandle(innerPolyPoints[1].x - (this.handle_side_length / 2), innerPolyPoints[1].y + ((innerPolyPoints[2].y - innerPolyPoints[1].y) / 2), 0);
 
   var croptastic = this;
   // dx/dy from Raphael are the changes in x/y from the drag start,
@@ -350,6 +362,7 @@ Croptastic.prototype.drawViewport = function () {
   });
   /*jslint unparam: false*/
 
+  var st;
   st = this.paper.set();
   st.push(this.viewportElement, this.ul_handle, this.ur_handle, this.lr_handle, this.ll_handle);
   this.viewportElementAndHandlesSet = st;
