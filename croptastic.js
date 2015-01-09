@@ -2,6 +2,28 @@
 /*global alert:false, Raphael:false, window:false, document:false, $:false */
 "use strict";
 
+// An enum that represents some pre-selected positions in the
+// viewport.  These aren't in clockwise order so that we can maintain
+// consistency with how Rafael orders corners.
+Croptastic.ViewportPositionEnum = {
+  UL : 0,
+  UR : 1,
+  LR : 2,
+  LL: 3,
+  CENTER_TOP : 4,
+  CENTER_RIGHT : 5,
+  CENTER_LOWER : 6,
+  CENTER_LEFT : 7
+};
+
+// Helper class to encapsulate resize handle behavior.  left_right &
+// up_down are true if the resize handle has those degrees of freedom.
+// corner_position is a value from ViewportPositionEnum and indicates
+// where the resize handle is.
+function CroptasticResizeHandle(left_right, up_down, corner_position) {
+
+}
+
 function Croptastic(parentNode, previewNode) {
   this.parentNode = parentNode;
   this.paper = null;
