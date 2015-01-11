@@ -5,7 +5,7 @@
 // An enum that represents some pre-selected positions in the
 // viewport.  These aren't in clockwise order so that we can maintain
 // consistency with how Rafael orders corners.
-Croptastic.ViewportPositionEnum = {
+CroptasticResizeHandle.ViewportPositionEnum = {
   UL : 0,
   UR : 1,
   LR : 2,
@@ -15,14 +15,172 @@ Croptastic.ViewportPositionEnum = {
   CENTER_LOWER : 6,
   CENTER_LEFT : 7
 };
+var positionEnum = CroptasticResizeHandle.ViewportPositionEnum;
 
 // Helper class to encapsulate resize handle behavior.  left_right &
 // up_down are true if the resize handle has those degrees of freedom.
-// corner_position is a value from ViewportPositionEnum and indicates
-// where the resize handle is.
-function CroptasticResizeHandle(left_right, up_down, corner_position) {
-
+// position is a value from ViewportPositionEnum and indicates where
+// the resize handle is.
+function CroptasticResizeHandle(croptastic, viewport, left_right_freedom,
+                                up_down_freedom, position,
+                                handle_side_length) {
+  this.croptastic = croptastic;
+  this.viewport = viewport;
+  this.left_right_freedom = left_right_freedom;
+  this.handle_side_length = handle_side_length;
+  this.up_down_freedom = up_down_freedom;
+  if (position < 0 || position > 7) {
+    return null;
+  }
+  this.position = position;
+  return this;
 }
+
+CroptasticResizeHandle.prototype.fixedCornerForSelf = function() {
+  switch(this.position) {
+  case positionEnum.UL:
+    return positionEnum.LR;
+  case positionEnum.UR:
+    return positionEnum.LL;
+  case positionEnum.LR:
+    return positionEnum.UL;
+  case positionEnum.LL:
+    return positionEnum.UR;
+  default:
+    return null;
+  }
+};
+
+// x, y are the coordinates around which the resize handle (which is a
+// square) is centered on.  fixedpoint_corner_nmber is the corner
+// number that remains stationary (or, the origin as Raphael refers to
+// it) while a resize handle is being dragged - usually it's the
+// opposite corner, but in the future it could be two of them (if we
+// support resizing by dragging an edge of the viewport, rather than a
+// corner).  The SVG polygons are drawn in clockwise order, to the
+// numbering for corners is 0-3 for UL, UR, LR, LL (according to
+// Raphael).
+CroptasticResizeHandle.prototype.drawResizeHandle = function () {
+  var center = this.croptastic.viewportCornerCoordinates(this.position);
+  var handle_points = this.squareAroundPoint(center.x,
+                                             center.y,
+                                             this.handle_side_length);
+  var handle_svg = this.pointsToSVGPolygonString(handle_points);
+  var handle = this.paper.path(handle_svg).attr("fill",
+                                                "#949393").attr("opacity", ".7");
+  var croptastic = this;
+  /*jslint unparam: true*/
+  handle.drag(function (dx, dy, mouseX, mouseY, e) {
+    // Convert mouse coordinates from browser (which are in the
+    // browser window coordinates) to paper/picture coordinates, which
+    // is what Raphael expects.
+    var mouseX_local = mouseX - croptastic.xoffset;
+    var mouseY_local = mouseY - croptastic.yoffset;
+
+    var viewport_size_dx = 0;
+    var viewport_size_dy = 0;
+    // There is a UI issue here - by calculating based on the center
+    // of the resize handle, there is a noticable visual artifact when
+    // the user grabs the handle anywhere but the center of the handle
+    // - the handle will "jump" as if the user had grabbed the center
+    // of the LR.  Much time was spent trying to correct for this but
+    // I had to move onto other things - it definitely should be
+    // fixed, though.
+    var handle_center_x = handle.matrix.x(handle.attrs.path[0][1],
+                                          handle.attrs.path[0][2]) - (croptastic.handle_side_length / 2);
+    var handle_center_y = handle.matrix.y(handle.attrs.path[0][1],
+                                          handle.attrs.path[0][2]) - (croptastic.handle_side_length / 2);
+    viewport_size_dx = mouseX_local - handle_center_x;
+    viewport_size_dy = mouseY_local - handle_center_y;
+    var fixedpoint = croptastic.viewportCornerCoordinates(croptastic.viewportCornerCoordinates(self.position));
+    var fixedpoint_x = fixedpoint.x;
+    var fixedpoint_y = fixedpoint.y;
+    var newSideLengthX = Math.abs(handle_center_x + viewport_size_dx - fixedpoint_x);
+    var newSideLengthY = Math.abs(handle_center_y + viewport_size_dy - fixedpoint_y);
+
+    // Prevent resize if the user has dragged the viewport to be too
+    // small in both dimensions.
+    if (newSideLengthX < croptastic.viewportSizeThreshold &&
+        newSideLengthY < croptastic.viewportSizeThreshold) {
+      return;
+    }
+
+    // If the user has only hit the minimum in one dimension, we can
+    // still resize in the other dimension.
+    if (newSideLengthX < croptastic.viewportSizeThreshold) {
+      newSideLengthX = croptastic.viewportSizeThreshold;
+    } else if (newSideLengthY < croptastic.viewportSizeThreshold) {
+      newSideLengthY = croptastic.viewportSizeThreshold;
+    }
+
+    croptastic.scaleViewport(newSideLengthX, newSideLengthY,
+                             fixedpoint_x, fixedpoint_y);
+    croptastic.positionULResizeHandle();
+    croptastic.positionURResizeHandle();
+    croptastic.positionLRResizeHandle();
+    croptastic.positionLLResizeHandle();
+
+    // croptastic.positionResizeHandle(croptastic.ul_handle, 0, 2);
+    // croptastic.positionResizeHandle(croptastic.lr_handle, 2, 0);
+    croptastic.drawShadeElement();
+    croptastic.updatePreview();
+  }, function (x, y, e) {
+    // We want the handle the user is dragging to move to the front,
+    // because if the user drags over another resize handle, we want
+    // our cursor to still be shown.
+    handle.toFront();
+
+    croptastic.setCursorsForResize(handle.node.style.cursor);
+  }, function (e) {
+    croptastic.setCursorsForResizeEnd();
+  });
+  /*jslint unparam: true*/
+  handle.toFront();
+  return handle;
+};
+
+CroptasticResizeHandle.prototype.positionHandle = function() {
+  // General algorithm here is to look at the outer corner of the
+  // viewport, and subtract the handle side length.  The difference
+  // between this new quantity and the original position of the
+  // opposite corner of handle is taken as the transform parameter.
+  var corner_point = this.croptastic.viewportCornerCoordinates(this.position);
+  var corner_x = corner_point.x;
+  var corner_y = corner_point.y;
+  console.log("drag corner x: " + corner_x);
+  console.log("drag corner y: " + corner_y);
+  var fixed_corner_num = this.fixedCornerForSelf(this.position);
+  var handle_fixed_point_x = this.handle.matrix.x(this.handle.attrs.path[fixed_corner_num][1],
+                                                  this.handle.attrs.path[fixed_corner_num][2]);
+  var handle_fixed_point_y = this.handle.matrix.y(this.handle.attrs.path[fixed_corner_num][1],
+                                                  this.handle.attrs.path[fixed_corner_num][2]);
+  var point_distance_x = Math.abs(corner_x - handle_fixed_point_x);
+  var point_distance_y = Math.abs(corner_y - handle_fixed_point_y);
+  // we need to figure out if the user is dragging the handle "inward"
+  // or "outward", where inward/outward means towards or away from the
+  // center of the viewport.
+  var inward = false;
+  var dx = null;
+  var dy = null;
+  if (corner_x < handle_fixed_point_x) {
+    // we're on the left side of the viewport
+    dx = this.handle_side_length - point_distance_x;
+  } else {
+    // we're on the right side of the viewport
+    dx = point_distance_x - this.handle_side_length;
+  }
+
+  if (corner_y < handle_fixed_point_y) {
+    // top of viewport
+    dy = this.handle_side_length - point_distance_y;
+  } else {
+    // bottom of viewport
+    dy = point_distance_y - this.handle_side_length;
+  }
+  var xformString = "T" + dx + "," + dy;
+  console.log(xformString);
+  this.handle.transform("..." + xformString);
+};
 
 function Croptastic(parentNode, previewNode) {
   this.parentNode = parentNode;
@@ -396,7 +554,7 @@ Croptastic.prototype.drawViewport = function () {
   this.ll_handle.node.style.cursor = "nesw-resize";
 };
 
-Croptastic.prototype.scaleViewport = function (newSideLengthX, newSideLengthY, x, y) {
+Croptastic.prototype.scaleViewport = function (newSideLengthX, newSideLengthY, fixed_point_x, fixed_point_y) {
 
   var multiplierX = newSideLengthX / this.sideLengthX;
   var multiplierY = newSideLengthY / this.sideLengthY;
@@ -405,7 +563,7 @@ Croptastic.prototype.scaleViewport = function (newSideLengthX, newSideLengthY, x
   this.sideLengthY = newSideLengthY;
 
   var scaleString = "S" + multiplierX + "," +
-        multiplierY + "," + x + "," + y;
+        multiplierY + "," + fixed_point_x + "," + fixed_point_y;
   this.viewportElement.transform("..." + scaleString);
   var new_point = this.viewportCornerCoordinates(0);
   var newx = new_point.x;
