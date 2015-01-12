@@ -35,12 +35,12 @@ function CroptasticResizeHandle(croptastic, viewport, left_right_freedom,
   }
   this.position = position;
   this.handle = null;
-  if (position == positionEnum.UL || position == positionEnum.LL) {
+  if (position === positionEnum.UL || position === positionEnum.LL) {
     this.inward_positive_x = true;
   } else {
     this.inward_positive_x = false;
   }
-  if (position == positionEnum.UL || position == positionEnum.UR) {
+  if (position === positionEnum.UL || position === positionEnum.UR) {
     this.inward_positive_y = true;
   } else {
     this.inward_positive_y = false;
@@ -48,8 +48,8 @@ function CroptasticResizeHandle(croptastic, viewport, left_right_freedom,
   return this;
 }
 
-CroptasticResizeHandle.prototype.fixedCornerForSelf = function() {
-  switch(this.position) {
+CroptasticResizeHandle.prototype.fixedCornerForSelf = function () {
+  switch (this.position) {
   case positionEnum.UL:
     return positionEnum.LR;
   case positionEnum.UR:
@@ -77,7 +77,7 @@ CroptasticResizeHandle.prototype.positionResizeHandle = function () {
   this.handle.transform("..." + xformString);
 };
 
-CroptasticResizeHandle.prototype.positionHandle = function() {
+CroptasticResizeHandle.prototype.positionHandle = function () {
   // General algorithm here is to look at the outer corner of the
   // viewport, and subtract the handle side length.  The difference
   // between this new quantity and the original position of the
@@ -97,7 +97,6 @@ CroptasticResizeHandle.prototype.positionHandle = function() {
   // we need to figure out if the user is dragging the handle "inward"
   // or "outward", where inward/outward means towards or away from the
   // center of the viewport.
-  var inward = false;
   var dx = null;
   var dy = null;
   if (this.inward_positive_x) {
@@ -158,7 +157,7 @@ CroptasticResizeHandle.prototype.drawResizeHandle = function () {
                                           handle.attrs.path[0][2]) - (croptastic.handle_side_length / 2);
     viewport_size_dx = mouseX_local - handle_center_x;
     viewport_size_dy = mouseY_local - handle_center_y;
-    var fixedpoint = croptastic.croptastic.viewportCornerCoordinates(croptastic.fixedCornerForSelf(self.position));
+    var fixedpoint = croptastic.croptastic.viewportCornerCoordinates(croptastic.fixedCornerForSelf(this.position));
     var fixedpoint_x = fixedpoint.x;
     var fixedpoint_y = fixedpoint.y;
     var newSideLengthX = Math.abs(handle_center_x + viewport_size_dx - fixedpoint_x);
@@ -334,7 +333,7 @@ Croptastic.prototype.updatePreview = function () {
                                 0, 0, this.previewWidth, this.previewHeight); // destination rectangle
 };
 
-function pointsToSVGPolygonString (points) {
+function pointsToSVGPolygonString(points) {
   var svgstring = "M" + points[0].x + "," + points[0].y + " ";
   var i = 0;
   for (i = 1; i < points.length; i += 1) {
@@ -342,33 +341,38 @@ function pointsToSVGPolygonString (points) {
   }
   svgstring += "Z";
   return svgstring;
-};
+}
 
 // Returns an array of points that represent a rectangle with sides
 // length sideLength{X,Y} around (x,y).  The points are returned in
 // clockwise order starting from the upper left.
-function rectangleAroundPoint (x, y, sideLengthX, sideLengthY) {
+function rectangleAroundPoint(x, y, sideLengthX, sideLengthY) {
   var halfXSideLength = sideLengthX / 2;
   var halfYSideLength = sideLengthY / 2;
   return [
-    {'x' : x - halfXSideLength,   // upper left
-     'y' : y - halfYSideLength},
-
-    {'x' : x + halfXSideLength,   // upper right
-     'y' : y - halfYSideLength},
-
-    {'x' : x + halfXSideLength,   // lower right
-     'y' : y + halfYSideLength},
-
-    {'x' : x - halfXSideLength,   // lower left
-     'y' : y + halfYSideLength}
+    {
+      'x' : x - halfXSideLength,   // upper left
+      'y' : y - halfYSideLength
+    },
+    {
+      'x' : x + halfXSideLength,   // upper right
+      'y' : y - halfYSideLength
+    },
+    {
+      'x' : x + halfXSideLength,   // lower right
+      'y' : y + halfYSideLength
+    },
+    {
+      'x' : x - halfXSideLength,   // lower left
+      'y' : y + halfYSideLength
+    }
   ];
 }
 
 // Returns an array of points that represent a square with sides
 // length sideLength around (x,y).  The points are returned in
 // clockwise order starting from the upper left.
-function squareAroundPoint (x, y, sideLength) {
+function squareAroundPoint(x, y, sideLength) {
   return rectangleAroundPoint(x, y, sideLength, sideLength);
 }
 
@@ -601,9 +605,9 @@ Croptastic.prototype.moveInnerViewport = function (dx, dy) {
   this.updatePreview();
 };
 
-Croptastic.prototype.positionResizeHandle = function(handle,
-                                                     corner,
-                                                     fixed_corner_num) {
+Croptastic.prototype.positionResizeHandle = function (handle,
+                                                      corner,
+                                                      fixed_corner_num) {
   // General algorithm here is to look at the outer corner of the
   // viewport, and subtract the handle side length.  The difference
   // between this new quantity and the original position of the
@@ -622,7 +626,6 @@ Croptastic.prototype.positionResizeHandle = function(handle,
   // we need to figure out if the user is dragging the handle "inward"
   // or "outward", where inward/outward means towards or away from the
   // center of the viewport.
-  var inward = false;
   var dx = null;
   var dy = null;
   if (corner_x < handle_fixed_point_x) {
