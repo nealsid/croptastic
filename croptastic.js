@@ -81,6 +81,11 @@ CroptasticResizeHandle.prototype.drawResizeHandle = function () {
 
     var viewport_size_dx = 0;
     var viewport_size_dy = 0;
+    var fixedpoint = croptastic.croptastic.positionCoordinates(croptastic.fixedCornerForSelf(this.position));
+    var fixedpoint_x = fixedpoint.x;
+    var fixedpoint_y = fixedpoint.y;
+    var newSideLengthX = null;
+    var newSideLengthY = null;
     // There is a UI issue here - by calculating based on the center
     // of the resize handle, there is a noticable visual artifact when
     // the user grabs the handle anywhere but the center of the handle
@@ -88,30 +93,36 @@ CroptasticResizeHandle.prototype.drawResizeHandle = function () {
     // of the LR.  Much time was spent trying to correct for this but
     // I had to move onto other things - it definitely should be
     // fixed, though.
-    var handle_center_x = handle.matrix.x(handle.attrs.path[0][1],
-                                          handle.attrs.path[0][2]) + (croptastic.handle_side_length / 2);
-    var handle_center_y = handle.matrix.y(handle.attrs.path[0][1],
-                                          handle.attrs.path[0][2]) + (croptastic.handle_side_length / 2);
-    viewport_size_dx = mouseX_local - handle_center_x;
-    viewport_size_dy = mouseY_local - handle_center_y;
-    var fixedpoint = croptastic.croptastic.positionCoordinates(croptastic.fixedCornerForSelf(this.position));
-    var fixedpoint_x = fixedpoint.x;
-    var fixedpoint_y = fixedpoint.y;
-    var newSideLengthX = Math.abs(handle_center_x + viewport_size_dx - fixedpoint_x);
-    var newSideLengthY = Math.abs(handle_center_y + viewport_size_dy - fixedpoint_y);
+    if (croptastic.left_right_freedom) {
+      var handle_center_x = handle.matrix.x(handle.attrs.path[0][1],
+                                            handle.attrs.path[0][2]) + (croptastic.handle_side_length / 2);
+      viewport_size_dx = mouseX_local - handle_center_x;
+      newSideLengthX = Math.abs(handle_center_x + viewport_size_dx - fixedpoint_x);
+    } else {
+      newSideLengthX = null;
+    }
+
+    if (croptastic.up_down_freedom) {
+      var handle_center_y = handle.matrix.y(handle.attrs.path[0][1],
+                                            handle.attrs.path[0][2]) + (croptastic.handle_side_length / 2);
+      viewport_size_dy = mouseY_local - handle_center_y;
+      newSideLengthY = Math.abs(handle_center_y + viewport_size_dy - fixedpoint_y);
+    } else {
+      newSideLengthY = null;
+    }
 
     // Prevent resize if the user has dragged the viewport to be too
     // small in both dimensions.
-    if (newSideLengthX < croptastic.croptastic.viewportSizeThreshold &&
-        newSideLengthY < croptastic.croptastic.viewportSizeThreshold) {
+    if (newSideLengthX && newSideLengthX < croptastic.croptastic.viewportSizeThreshold &&
+        newSideLengthY && newSideLengthY < croptastic.croptastic.viewportSizeThreshold) {
       return;
     }
 
     // If the user has only hit the minimum in one dimension, we can
     // still resize in the other dimension.
-    if (newSideLengthX < croptastic.croptastic.viewportSizeThreshold) {
+    if (newSideLengthX && newSideLengthX < croptastic.croptastic.viewportSizeThreshold) {
       newSideLengthX = croptastic.croptastic.viewportSizeThreshold;
-    } else if (newSideLengthY < croptastic.croptastic.viewportSizeThreshold) {
+    } else if (newSideLengthY && newSideLengthY < croptastic.croptastic.viewportSizeThreshold) {
       newSideLengthY = croptastic.croptastic.viewportSizeThreshold;
     }
 
@@ -145,6 +156,8 @@ CroptasticResizeHandle.prototype.fixedCornerForSelf = function () {
   case positionEnum.LR:
     return positionEnum.UL;
   case positionEnum.LL:
+    return positionEnum.UR;
+  case positionEnum.CENTER_LEFT:
     return positionEnum.UR;
   default:
     return null;
@@ -187,7 +200,6 @@ CroptasticResizeHandle.prototype.positionHandle = function () {
     dy = point_distance_y - this.handle_side_length;
   }
   var xformString = "T" + dx + "," + dy;
-  console.log(xformString);
   this.handle.transform("..." + xformString);
 };
 
@@ -437,6 +449,13 @@ Croptastic.prototype.drawViewport = function () {
                                       true, true, positionEnum.LL,
                                       this.handle_side_length);
   this.resizeHandles.push(handle);
+
+  handle = new CroptasticResizeHandle(this,
+                                      this.viewportElement,
+                                      true, false, positionEnum.CENTER_LEFT,
+                                      this.handle_side_length);
+  this.resizeHandles.push(handle);
+
   this.drawResizeHandles();
 
   var croptastic = this;
@@ -479,11 +498,20 @@ Croptastic.prototype.drawViewport = function () {
 };
 
 Croptastic.prototype.scaleViewport = function (newSideLengthX, newSideLengthY, fixed_point_x, fixed_point_y) {
-  var multiplierX = newSideLengthX / this.sideLengthX;
-  var multiplierY = newSideLengthY / this.sideLengthY;
-
-  this.sideLengthX = newSideLengthX;
-  this.sideLengthY = newSideLengthY;
+  var multiplierX;
+  var multiplierY;
+  if (newSideLengthX) {
+    multiplierX = newSideLengthX / this.sideLengthX;
+    this.sideLengthX = newSideLengthX;
+  } else {
+    multiplierX = 1;
+  }
+  if (newSideLengthY) {
+    multiplierY = newSideLengthY / this.sideLengthY;
+    this.sideLengthY = newSideLengthY;
+  } else {
+    multiplierY = 1;
+  }
 
   var scaleString = "S" + multiplierX + "," +
         multiplierY + "," + fixed_point_x + "," + fixed_point_y;
@@ -491,8 +519,13 @@ Croptastic.prototype.scaleViewport = function (newSideLengthX, newSideLengthY, f
   var new_point = this.positionCoordinates(0);
   var newx = new_point.x;
   var newy = new_point.y;
-  this.viewportCenterX = newx + (newSideLengthX / 2);
-  this.viewportCenterY = newy + (newSideLengthY / 2);
+
+  if (newSideLengthX) {
+    this.viewportCenterX = newx + (newSideLengthX / 2);
+  }
+  if (newSideLengthY) {
+    this.viewportCenterY = newy + (newSideLengthY / 2);
+  }
 };
 
 Croptastic.prototype.moveInnerViewport = function (dx, dy) {
