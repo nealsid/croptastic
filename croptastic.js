@@ -1,5 +1,5 @@
-/*jslint newcap: true, vars: true, indent: 2 */
-/*global alert, Raphael, window, document, $ */
+/*jslint newcap: true, vars: true, indent: 2, plusplus: true */
+/*global alert, Raphael, window, document, $, console */
 "use strict";
 
 // An enum that represents some pre-selected positions in the
@@ -35,12 +35,15 @@ function CroptasticResizeHandle(croptastic, viewport, left_right_freedom,
   this.handle_side_length = handle_side_length;
   this.position = position;
   this.handle = null;
-  if (position === positionEnum.UL || position === positionEnum.LL || position === positionEnum.CENTER_LEFT) {
+  if (position === positionEnum.UL ||
+      position === positionEnum.LL ||
+      position === positionEnum.CENTER_LEFT) {
     this.inward_positive_x = true;
   } else {
     this.inward_positive_x = false;
   }
-  if (position === positionEnum.UL || position === positionEnum.UR) {
+  if (position === positionEnum.UL ||
+      position === positionEnum.UR) {
     this.inward_positive_y = true;
   } else {
     this.inward_positive_y = false;
@@ -399,12 +402,14 @@ Croptastic.prototype.viewportCornerCoordinates = function (cornerNumber) {
 };
 
 Croptastic.prototype.positionAllResizeHandles = function () {
-  for (var i = 0; i < this.resizeHandles.length; ++i) {
+  var i = 0;
+  for (i = 0; i < this.resizeHandles.length; ++i) {
     this.resizeHandles[i].positionHandle();
   }
 };
-Croptastic.prototype.drawResizeHandles = function() {
-  for (var i = 0; i < this.resizeHandles.length; ++i) {
+Croptastic.prototype.drawResizeHandles = function () {
+  var i = 0;
+  for (i = 0; i < this.resizeHandles.length; ++i) {
     this.resizeHandles[i].drawResizeHandle();
   }
 };
@@ -484,7 +489,8 @@ Croptastic.prototype.drawViewport = function () {
   var st;
   st = this.paper.set();
   st.push(this.viewportElement);
-  for (var i = 0; i < this.resizeHandles.length; ++i) {
+  var i = 0;
+  for (i = 0; i < this.resizeHandles.length; ++i) {
     st.push(this.resizeHandles[i].handle);
   }
 
@@ -506,6 +512,7 @@ Croptastic.prototype.scaleViewport = function (newSideLengthX, newSideLengthY, f
   } else {
     multiplierX = 1;
   }
+
   if (newSideLengthY) {
     multiplierY = newSideLengthY / this.sideLengthY;
     this.sideLengthY = newSideLengthY;
