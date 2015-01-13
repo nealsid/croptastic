@@ -25,17 +25,17 @@ var positionEnum = CroptasticResizeHandle.ViewportPositionEnum;
 function CroptasticResizeHandle(croptastic, viewport, left_right_freedom,
                                 up_down_freedom, position,
                                 handle_side_length) {
-  this.croptastic = croptastic;
-  this.viewport = viewport;
-  this.left_right_freedom = left_right_freedom;
-  this.handle_side_length = handle_side_length;
-  this.up_down_freedom = up_down_freedom;
   if (position < 0 || position > 7) {
     return null;
   }
+  this.croptastic = croptastic;
+  this.viewport = viewport;
+  this.left_right_freedom = left_right_freedom;
+  this.up_down_freedom = up_down_freedom;
+  this.handle_side_length = handle_side_length;
   this.position = position;
   this.handle = null;
-  if (position === positionEnum.UL || position === positionEnum.LL) {
+  if (position === positionEnum.UL || position === positionEnum.LL || position === positionEnum.CENTER_LEFT) {
     this.inward_positive_x = true;
   } else {
     this.inward_positive_x = false;
@@ -48,63 +48,8 @@ function CroptasticResizeHandle(croptastic, viewport, left_right_freedom,
   return this;
 }
 
-CroptasticResizeHandle.prototype.fixedCornerForSelf = function () {
-  switch (this.position) {
-  case positionEnum.UL:
-    return positionEnum.LR;
-  case positionEnum.UR:
-    return positionEnum.LL;
-  case positionEnum.LR:
-    return positionEnum.UL;
-  case positionEnum.LL:
-    return positionEnum.UR;
-  default:
-    return null;
-  }
-};
-
-CroptasticResizeHandle.prototype.positionHandle = function () {
-  // General algorithm here is to look at the outer corner of the
-  // viewport, and subtract the handle side length.  The difference
-  // between this new quantity and the original position of the
-  // opposite corner of handle is taken as the transform parameter.
-  var corner_point = this.croptastic.viewportCornerCoordinates(this.position);
-  var corner_x = corner_point.x;
-  var corner_y = corner_point.y;
-  var fixed_corner_num = this.fixedCornerForSelf(this.position);
-  var handle_fixed_point_x = this.handle.matrix.x(this.handle.attrs.path[fixed_corner_num][1],
-                                                  this.handle.attrs.path[fixed_corner_num][2]);
-  var handle_fixed_point_y = this.handle.matrix.y(this.handle.attrs.path[fixed_corner_num][1],
-                                                  this.handle.attrs.path[fixed_corner_num][2]);
-  var point_distance_x = corner_x - handle_fixed_point_x;
-  var point_distance_y = corner_y - handle_fixed_point_y;
-  // we need to figure out if the user is dragging the handle "inward"
-  // or "outward", where inward/outward means towards or away from the
-  // center of the viewport.
-  var dx = null;
-  var dy = null;
-  if (this.inward_positive_x) {
-    // we're on the left side of the viewport
-    dx = point_distance_x + this.handle_side_length;
-  } else {
-    // we're on the right side of the viewport
-    dx = point_distance_x - this.handle_side_length;
-  }
-
-  if (this.inward_positive_y) {
-    // top of viewport
-    dy = point_distance_y + this.handle_side_length;
-  } else {
-    // bottom of viewport
-    dy = point_distance_y - this.handle_side_length;
-  }
-  var xformString = "T" + dx + "," + dy;
-  console.log(xformString);
-  this.handle.transform("..." + xformString);
-};
-
 CroptasticResizeHandle.prototype.drawResizeHandle = function () {
-  var center = this.croptastic.viewportCornerCoordinates(this.position);
+  var center = this.croptastic.positionCoordinates(this.position);
   var center_x;
   var center_y;
   if (this.inward_positive_x) {
@@ -149,7 +94,7 @@ CroptasticResizeHandle.prototype.drawResizeHandle = function () {
                                           handle.attrs.path[0][2]) + (croptastic.handle_side_length / 2);
     viewport_size_dx = mouseX_local - handle_center_x;
     viewport_size_dy = mouseY_local - handle_center_y;
-    var fixedpoint = croptastic.croptastic.viewportCornerCoordinates(croptastic.fixedCornerForSelf(this.position));
+    var fixedpoint = croptastic.croptastic.positionCoordinates(croptastic.fixedCornerForSelf(this.position));
     var fixedpoint_x = fixedpoint.x;
     var fixedpoint_y = fixedpoint.y;
     var newSideLengthX = Math.abs(handle_center_x + viewport_size_dx - fixedpoint_x);
@@ -189,6 +134,61 @@ CroptasticResizeHandle.prototype.drawResizeHandle = function () {
   /*jslint unparam: true*/
   handle.toFront();
   return handle;
+};
+
+CroptasticResizeHandle.prototype.fixedCornerForSelf = function () {
+  switch (this.position) {
+  case positionEnum.UL:
+    return positionEnum.LR;
+  case positionEnum.UR:
+    return positionEnum.LL;
+  case positionEnum.LR:
+    return positionEnum.UL;
+  case positionEnum.LL:
+    return positionEnum.UR;
+  default:
+    return null;
+  }
+};
+
+CroptasticResizeHandle.prototype.positionHandle = function () {
+  // General algorithm here is to look at the outer corner of the
+  // viewport, and subtract the handle side length.  The difference
+  // between this new quantity and the original position of the
+  // opposite corner of handle is taken as the transform parameter.
+  var corner_point = this.croptastic.positionCoordinates(this.position);
+  var corner_x = corner_point.x;
+  var corner_y = corner_point.y;
+  var fixed_corner_num = this.fixedCornerForSelf(this.position);
+  var handle_fixed_point_x = this.handle.matrix.x(this.handle.attrs.path[fixed_corner_num][1],
+                                                  this.handle.attrs.path[fixed_corner_num][2]);
+  var handle_fixed_point_y = this.handle.matrix.y(this.handle.attrs.path[fixed_corner_num][1],
+                                                  this.handle.attrs.path[fixed_corner_num][2]);
+  var point_distance_x = corner_x - handle_fixed_point_x;
+  var point_distance_y = corner_y - handle_fixed_point_y;
+  // we need to figure out if the user is dragging the handle "inward"
+  // or "outward", where inward/outward means towards or away from the
+  // center of the viewport.
+  var dx = null;
+  var dy = null;
+  if (this.inward_positive_x) {
+    // we're on the left side of the viewport
+    dx = point_distance_x + this.handle_side_length;
+  } else {
+    // we're on the right side of the viewport
+    dx = point_distance_x - this.handle_side_length;
+  }
+
+  if (this.inward_positive_y) {
+    // top of viewport
+    dy = point_distance_y + this.handle_side_length;
+  } else {
+    // bottom of viewport
+    dy = point_distance_y - this.handle_side_length;
+  }
+  var xformString = "T" + dx + "," + dy;
+  console.log(xformString);
+  this.handle.transform("..." + xformString);
 };
 
 function Croptastic(parentNode, previewNode) {
@@ -360,6 +360,22 @@ Croptastic.prototype.setCursorsForResizeEnd = function () {
   this.viewportElement.node.style.cursor = this.oldViewportCursor;
 };
 
+Croptastic.prototype.positionCoordinates = function (position) {
+  if (position < 4) {
+    return this.viewportCornerCoordinates(position);
+  }
+
+  if (position === positionEnum.CENTER_LEFT) {
+    var ll = this.positionCoordinates(positionEnum.LL);
+    var ul = this.positionCoordinates(positionEnum.UL);
+    return {
+      'x': ul.x,
+      'y': ll.y - ((ll.y - ul.y) / 2)
+    };
+  }
+  return null;
+};
+
 Croptastic.prototype.viewportCornerCoordinates = function (cornerNumber) {
   var pathElement = this.viewportElement.attrs.path[cornerNumber];
   return {
@@ -370,7 +386,7 @@ Croptastic.prototype.viewportCornerCoordinates = function (cornerNumber) {
   };
 };
 
-Croptastic.prototype.positionAllResizeHandles = function() {
+Croptastic.prototype.positionAllResizeHandles = function () {
   for (var i = 0; i < this.resizeHandles.length; ++i) {
     this.resizeHandles[i].positionHandle();
   }
@@ -472,7 +488,7 @@ Croptastic.prototype.scaleViewport = function (newSideLengthX, newSideLengthY, f
   var scaleString = "S" + multiplierX + "," +
         multiplierY + "," + fixed_point_x + "," + fixed_point_y;
   this.viewportElement.transform("..." + scaleString);
-  var new_point = this.viewportCornerCoordinates(0);
+  var new_point = this.positionCoordinates(0);
   var newx = new_point.x;
   var newy = new_point.y;
   this.viewportCenterX = newx + (newSideLengthX / 2);
