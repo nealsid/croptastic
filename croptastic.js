@@ -12,17 +12,28 @@ CroptasticResizeHandle.ViewportPositionEnum = {
   LL: 3,
   CENTER_TOP : 4,
   CENTER_RIGHT : 5,
-  CENTER_LOWER : 6,
+  CENTER_BOTTOM : 6,
   CENTER_LEFT : 7
 };
 
+CroptasticResizeHandle.PositionGroupEnum = {
+  TOP : 0,
+  HORIZ_MIDDLE : 1,
+  BOTTOM : 2,
+  LEFT : 3,
+  VERTICAL_MIDDLE : 4,
+  RIGHT : 4
+};
+
 var positionEnum = CroptasticResizeHandle.ViewportPositionEnum;
+var positionGroupEnum = CroptasticResizeHandle.PositionGroupEnum;
 
 // Helper class to encapsulate resize handle behavior.  left_right &
 // up_down are true if the resize handle has those degrees of freedom.
 // position is a value from ViewportPositionEnum and indicates where
 // the resize handle is.
-function CroptasticResizeHandle(croptastic, viewport, left_right_freedom,
+function CroptasticResizeHandle(croptastic, viewport,
+                                left_right_freedom,
                                 up_down_freedom, position,
                                 handle_side_length) {
   if (position < 0 || position > 7) {
@@ -35,6 +46,7 @@ function CroptasticResizeHandle(croptastic, viewport, left_right_freedom,
   this.handle_side_length = handle_side_length;
   this.position = position;
   this.handle = null;
+
   if (position === positionEnum.UL ||
       position === positionEnum.LL ||
       position === positionEnum.CENTER_LEFT) {
@@ -55,17 +67,23 @@ CroptasticResizeHandle.prototype.drawResizeHandle = function () {
   var center = this.croptastic.positionCoordinates(this.position);
   var center_x;
   var center_y;
-  if (this.inward_positive_x) {
+
+  if (this.positionGroup === positionGroupEnum.VERTICAL_MIDDLE) {
+    center_x = center.x;
+  } else if (this.positionGroup === positionGroupEnum.LEFT) {
     center_x = center.x + this.handle_side_length / 2;
   } else {
     center_x = center.x - this.handle_side_length / 2;
   }
 
-  if (this.inward_positive_y) {
+  if (this.up_down_freedom && this.inward_positive_y) {
     center_y = center.y + this.handle_side_length / 2;
-  } else {
+  } else if (this.up_down_freedom) {
     center_y = center.y - this.handle_side_length / 2;
+  } else {
+    center_y = center.y;
   }
+
   var handle_points = squareAroundPoint(center_x, center_y,
                                         this.handle_side_length);
   var handle_svg = pointsToSVGPolygonString(handle_points);
@@ -167,27 +185,49 @@ CroptasticResizeHandle.prototype.fixedCornerForSelf = function () {
   }
 };
 
+CroptasticResizeHandle.prototype.positionOfHandleCenter = function () {
+  var center = this.croptastic.positionCoordinates(this.position);
+  var center_x;
+  var center_y;
+
+  if (this.left_right_freedom && this.inward_positive_x) {
+    center_x = center.x + this.handle_side_length / 2;
+  } else if (this.left_right_freedom) {
+    center_x = center.x - this.handle_side_length / 2;
+  } else {
+    center_x = center.x;
+  }
+
+  if (this.up_down_freedom && this.inward_positive_y) {
+    center_y = center.y + this.handle_side_length / 2;
+  } else if (this.up_down_freedom) {
+    center_y = center.y - this.handle_side_length / 2;
+  } else {
+    center_y = center.y;
+  }
+};
+
 CroptasticResizeHandle.prototype.positionHandle = function () {
   // General algorithm here is to look at the outer corner of the
   // viewport, and subtract the handle side length.  The difference
   // between this new quantity and the original position of the
   // opposite corner of handle is taken as the transform parameter.
-  var corner_point = this.croptastic.positionCoordinates(this.position);
-  var corner_x = corner_point.x;
-  var corner_y = corner_point.y;
+  var handle_center_point = this.croptastic.positionCoordinates(this.position);
+  var handle_center_x = handle_center_point.x;
+  var handle_center_y = handle_center_point.y;
   var fixed_corner_num = this.fixedCornerForSelf(this.position);
   var handle_fixed_point_x = this.handle.matrix.x(this.handle.attrs.path[fixed_corner_num][1],
                                                   this.handle.attrs.path[fixed_corner_num][2]);
   var handle_fixed_point_y = this.handle.matrix.y(this.handle.attrs.path[fixed_corner_num][1],
                                                   this.handle.attrs.path[fixed_corner_num][2]);
-  var point_distance_x = corner_x - handle_fixed_point_x;
-  var point_distance_y = corner_y - handle_fixed_point_y;
+  var point_distance_x = handle_center_x - handle_fixed_point_x;
+  var point_distance_y = handle_center_y - handle_fixed_point_y;
   // we need to figure out if the user is dragging the handle "inward"
   // or "outward", where inward/outward means towards or away from the
   // center of the viewport.
   var dx = null;
   var dy = null;
-  if (this.inward_positive_x) {
+  if (this.left_right_freedom && this.inward_positive_x) {
     // we're on the left side of the viewport
     dx = point_distance_x + this.handle_side_length;
   } else {
@@ -195,13 +235,14 @@ CroptasticResizeHandle.prototype.positionHandle = function () {
     dx = point_distance_x - this.handle_side_length;
   }
 
-  if (this.inward_positive_y) {
+  if (this.up_down_freedom && this.inward_positive_y) {
     // top of viewport
     dy = point_distance_y + this.handle_side_length;
   } else {
     // bottom of viewport
     dy = point_distance_y - this.handle_side_length;
   }
+
   var xformString = "T" + dx + "," + dy;
   this.handle.transform("..." + xformString);
 };
