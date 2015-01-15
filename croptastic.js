@@ -2,9 +2,22 @@
 /*global alert, Raphael, window, document, $, console */
 "use strict";
 
+function add(a, b) {
+  return a + b;
+}
+
+function subtract(a, b) {
+  return a - b;
+}
+
+function identity(a) {
+  return a;
+}
+
 // An enum that represents some pre-selected positions in the
 // viewport.  These aren't in clockwise order so that we can maintain
 // consistency with how Rafael orders corners.
+// The enum strategy here is from: https://stijndewitt.wordpress.com/2014/01/26/enums-in-javascript/
 CroptasticResizeHandle.ViewportPositionEnum = {
   UL : 0,
   UR : 1,
@@ -13,20 +26,44 @@ CroptasticResizeHandle.ViewportPositionEnum = {
   CENTER_TOP : 4,
   CENTER_RIGHT : 5,
   CENTER_BOTTOM : 6,
-  CENTER_LEFT : 7
-};
-
-CroptasticResizeHandle.PositionGroupEnum = {
-  TOP : 0,
-  HORIZ_MIDDLE : 1,
-  BOTTOM : 2,
-  LEFT : 3,
-  VERTICAL_MIDDLE : 4,
-  RIGHT : 4
+  CENTER_LEFT : 7,
+  properties : {
+    0 : {
+      'offset_x' : add,
+      'offset_y' : add
+    },
+    1 : {
+      'offset_x' : subtract,
+      'offset_y' : add
+    },
+    2 : {
+      'offset_x' : subtract,
+      'offset_y' : subtract
+    },
+    3 : {
+      'offset_x' : add,
+      'offset_y' : subtract
+    },
+    4 : {
+      'offset_x' : identity,
+      'offset_y' : add
+    },
+    5 : {
+      'offset_x' : subtract,
+      'offset_y' : identity
+    },
+    6 : {
+      'offset_x' : identity,
+      'offset_y' : subtract
+    },
+    7 : {
+      'offset_x' : add,
+      'offset_y' : identity
+    }
+  }
 };
 
 var positionEnum = CroptasticResizeHandle.ViewportPositionEnum;
-var positionGroupEnum = CroptasticResizeHandle.PositionGroupEnum;
 
 // Helper class to encapsulate resize handle behavior.  left_right &
 // up_down are true if the resize handle has those degrees of freedom.
@@ -47,44 +84,19 @@ function CroptasticResizeHandle(croptastic, viewport,
   this.position = position;
   this.handle = null;
 
-  if (position === positionEnum.UL ||
-      position === positionEnum.LL ||
-      position === positionEnum.CENTER_LEFT) {
-    this.inward_positive_x = true;
-  } else {
-    this.inward_positive_x = false;
-  }
-  if (position === positionEnum.UL ||
-      position === positionEnum.UR) {
-    this.inward_positive_y = true;
-  } else {
-    this.inward_positive_y = false;
-  }
   return this;
 }
 
 CroptasticResizeHandle.prototype.drawResizeHandle = function () {
   var center = this.croptastic.positionCoordinates(this.position);
-  var center_x;
-  var center_y;
+  var handle_center_x;
+  var handle_center_y;
+  handle_center_x = positionEnum.properties[this.position].offset_x(center.x,
+                                                             this.handle_side_length / 2);
+  handle_center_y = positionEnum.properties[this.position].offset_y(center.y,
+                                                             this.handle_side_length / 2);
 
-  if (this.positionGroup === positionGroupEnum.VERTICAL_MIDDLE) {
-    center_x = center.x;
-  } else if (this.positionGroup === positionGroupEnum.LEFT) {
-    center_x = center.x + this.handle_side_length / 2;
-  } else {
-    center_x = center.x - this.handle_side_length / 2;
-  }
-
-  if (this.up_down_freedom && this.inward_positive_y) {
-    center_y = center.y + this.handle_side_length / 2;
-  } else if (this.up_down_freedom) {
-    center_y = center.y - this.handle_side_length / 2;
-  } else {
-    center_y = center.y;
-  }
-
-  var handle_points = squareAroundPoint(center_x, center_y,
+  var handle_points = squareAroundPoint(handle_center_x, handle_center_y,
                                         this.handle_side_length);
   var handle_svg = pointsToSVGPolygonString(handle_points);
   this.handle =
@@ -185,36 +197,18 @@ CroptasticResizeHandle.prototype.fixedCornerForSelf = function () {
   }
 };
 
-CroptasticResizeHandle.prototype.positionOfHandleCenter = function () {
-  var center = this.croptastic.positionCoordinates(this.position);
-  var center_x;
-  var center_y;
-
-  if (this.left_right_freedom && this.inward_positive_x) {
-    center_x = center.x + this.handle_side_length / 2;
-  } else if (this.left_right_freedom) {
-    center_x = center.x - this.handle_side_length / 2;
-  } else {
-    center_x = center.x;
-  }
-
-  if (this.up_down_freedom && this.inward_positive_y) {
-    center_y = center.y + this.handle_side_length / 2;
-  } else if (this.up_down_freedom) {
-    center_y = center.y - this.handle_side_length / 2;
-  } else {
-    center_y = center.y;
-  }
-};
-
 CroptasticResizeHandle.prototype.positionHandle = function () {
   // General algorithm here is to look at the outer corner of the
   // viewport, and subtract the handle side length.  The difference
   // between this new quantity and the original position of the
   // opposite corner of handle is taken as the transform parameter.
-  var handle_center_point = this.croptastic.positionCoordinates(this.position);
-  var handle_center_x = handle_center_point.x;
-  var handle_center_y = handle_center_point.y;
+  var center = this.croptastic.positionCoordinates(this.position);
+  var handle_center_x;
+  var handle_center_y;
+  handle_center_x = positionEnum.properties[this.position].offset_x(center.x,
+                                                             this.handle_side_length / 2);
+  handle_center_y = positionEnum.properties[this.position].offset_y(center.y,
+                                                             this.handle_side_length / 2);
   var fixed_corner_num = this.fixedCornerForSelf(this.position);
   var handle_fixed_point_x = this.handle.matrix.x(this.handle.attrs.path[fixed_corner_num][1],
                                                   this.handle.attrs.path[fixed_corner_num][2]);
