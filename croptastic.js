@@ -472,6 +472,10 @@ Croptastic.prototype.drawViewport = function () {
 
   this.viewportElement = this.paper.path(viewportSVG).attr("fill",
                                                            "transparent");
+  // Hack to make it work in Firefox, since it doesn't appear to send
+  // mouse events to elements with no fill.  Works fine in
+  // Chrome/Safari, though.
+  $(this.viewportElement.node).css("pointer-events", "visibleFill");
   // Draw resize handles.
   var handle = new CroptasticResizeHandle(this,
                                           this.viewportElement,
