@@ -198,46 +198,20 @@ CroptasticResizeHandle.prototype.fixedCornerForSelf = function () {
 };
 
 CroptasticResizeHandle.prototype.positionHandle = function () {
-  // General algorithm here is to look at the outer corner of the
-  // viewport, and subtract the handle side length.  The difference
-  // between this new quantity and the original position of the
-  // opposite corner of handle is taken as the transform parameter.
   var center = this.croptastic.positionCoordinates(this.position);
-  var handle_center_x;
-  var handle_center_y;
-  handle_center_x = positionEnum.properties[this.position].offset_x(center.x,
-                                                             this.handle_side_length / 2);
-  handle_center_y = positionEnum.properties[this.position].offset_y(center.y,
-                                                             this.handle_side_length / 2);
-  var fixed_corner_num = this.fixedCornerForSelf(this.position);
-  var handle_fixed_point_x = this.handle.matrix.x(this.handle.attrs.path[fixed_corner_num][1],
-                                                  this.handle.attrs.path[fixed_corner_num][2]);
-  var handle_fixed_point_y = this.handle.matrix.y(this.handle.attrs.path[fixed_corner_num][1],
-                                                  this.handle.attrs.path[fixed_corner_num][2]);
-  var point_distance_x = handle_center_x - handle_fixed_point_x;
-  var point_distance_y = handle_center_y - handle_fixed_point_y;
-  // we need to figure out if the user is dragging the handle "inward"
-  // or "outward", where inward/outward means towards or away from the
-  // center of the viewport.
-  var dx = null;
-  var dy = null;
-  if (this.left_right_freedom && this.inward_positive_x) {
-    // we're on the left side of the viewport
-    dx = point_distance_x + this.handle_side_length;
-  } else {
-    // we're on the right side of the viewport
-    dx = point_distance_x - this.handle_side_length;
-  }
-
-  if (this.up_down_freedom && this.inward_positive_y) {
-    // top of viewport
-    dy = point_distance_y + this.handle_side_length;
-  } else {
-    // bottom of viewport
-    dy = point_distance_y - this.handle_side_length;
-  }
-
-  var xformString = "T" + dx + "," + dy;
+  var new_handle_center_x;
+  var new_handle_center_y;
+  new_handle_center_x = positionEnum.properties[this.position].offset_x(center.x,
+                                                                        this.handle_side_length / 2);
+  new_handle_center_y = positionEnum.properties[this.position].offset_y(center.y,
+                                                                        this.handle_side_length / 2);
+  var current_handle_center_x = this.handle.matrix.x(this.handle.attrs.path[0][1],
+                                                     this.handle.attrs.path[0][2]) + (this.handle_side_length / 2);
+  var current_handle_center_y = this.handle.matrix.y(this.handle.attrs.path[0][1],
+                                                  this.handle.attrs.path[0][2]) + (this.handle_side_length / 2);
+  var point_distance_x = new_handle_center_x - current_handle_center_x;
+  var point_distance_y = new_handle_center_y - current_handle_center_y;
+  var xformString = "T" + point_distance_x + "," + point_distance_y;
   this.handle.transform("..." + xformString);
 };
 
