@@ -499,6 +499,15 @@ Croptastic.prototype.drawViewport = function () {
 
   this.viewportElement = this.paper.path(viewportSVG).attr("fill",
                                                            "transparent");
+  var ul_coordinate = innerPolyPoints[0];
+  // var gridline_points = [];
+  // var grid_start_x = ul_coordinate.x + (this.sideLengthX / 3);
+  // var grid_start_y = ul_coordinate.y;
+  // var grid_end_x = ul_coordinate.x + (this.sideLengthX / 3);
+  // var grid_end_y = innerPolyPoints[3].y;
+  // gridline_points.push({'x':grid_start_x,'y':grid_start_y}, {'x':grid_end_x, 'y':grid_end_y});
+  // var gridlineString = pointsToSVGPolygonString(gridline_points);
+  // this.gridlineElement = this.paper.path(gridlineString);
   // Hack to make it work in Firefox, since it doesn't appear to send
   // mouse events to elements with no fill.  Works fine in
   // Chrome/Safari, though.
@@ -586,7 +595,7 @@ Croptastic.prototype.drawViewport = function () {
   for (i = 0; i < this.resizeHandles.length; ++i) {
     st.push(this.resizeHandles[i].handle);
   }
-
+  // st.push(this.gridlineElement);
   this.viewportElementAndHandlesSet = st;
   $(this.viewportElement.node).css("cursor", "-webkit-grabbing");
   $(this.viewportElement.node).css("cursor", "-moz-grabbing");
@@ -612,6 +621,7 @@ Croptastic.prototype.scaleViewport = function (newSideLengthX, newSideLengthY, f
   var scaleString = "S" + multiplierX + "," +
         multiplierY + "," + fixed_point_x + "," + fixed_point_y;
   this.viewportElement.transform("..." + scaleString);
+  // this.gridlineElement.transform("..." + scaleString);
   var new_point = this.positionCoordinates(0);
   var newx = new_point.x;
   var newy = new_point.y;
