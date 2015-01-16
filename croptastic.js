@@ -2,6 +2,8 @@
 /*global alert, Raphael, window, document, $, console */
 "use strict";
 
+// The following three functions are defined so we call them via
+// function pointer.
 function add(a, b) {
   return a + b;
 }
@@ -87,16 +89,19 @@ function CroptasticResizeHandle(croptastic, viewport,
   return this;
 }
 
-CroptasticResizeHandle.prototype.drawResizeHandle = function () {
+CroptasticResizeHandle.prototype.resizeHandleCenterCoordinate = function () {
   var center = this.croptastic.positionCoordinates(this.position);
-  var handle_center_x;
-  var handle_center_y;
-  handle_center_x = positionEnum.properties[this.position].offset_x(center.x,
+  var handle_center = {};
+  handle_center.x = positionEnum.properties[this.position].offset_x(center.x,
                                                              this.handle_side_length / 2);
-  handle_center_y = positionEnum.properties[this.position].offset_y(center.y,
+  handle_center.y = positionEnum.properties[this.position].offset_y(center.y,
                                                              this.handle_side_length / 2);
+  return handle_center;
+};
 
-  var handle_points = squareAroundPoint(handle_center_x, handle_center_y,
+CroptasticResizeHandle.prototype.drawResizeHandle = function () {
+  var handle_center = this.resizeHandleCenterCoordinate();
+  var handle_points = squareAroundPoint(handle_center.x, handle_center.y,
                                         this.handle_side_length);
   var handle_svg = pointsToSVGPolygonString(handle_points);
   this.handle =
@@ -114,9 +119,6 @@ CroptasticResizeHandle.prototype.drawResizeHandle = function () {
 
     var viewport_size_dx = 0;
     var viewport_size_dy = 0;
-    var fixedpoint = croptastic.croptastic.positionCoordinates(croptastic.fixedCornerForSelf(this.position));
-    var fixedpoint_x = fixedpoint.x;
-    var fixedpoint_y = fixedpoint.y;
 
     var newSideLengthX = croptastic.croptastic.sideLengthX;
     var newSideLengthY = croptastic.croptastic.sideLengthY;
@@ -166,8 +168,11 @@ CroptasticResizeHandle.prototype.drawResizeHandle = function () {
       newSideLengthY = croptastic.croptastic.viewportSizeThreshold;
     }
 
+    var scale_origin = croptastic.croptastic.positionCoordinates(croptastic.fixedCornerForSelf(this.position));
+    var scale_origin_x = scale_origin.x;
+    var scale_origin_y = scale_origin.y;
     croptastic.croptastic.scaleViewport(newSideLengthX, newSideLengthY,
-                                        fixedpoint_x, fixedpoint_y);
+                                        scale_origin_x, scale_origin_y);
     croptastic.croptastic.positionAllResizeHandles();
 
     croptastic.croptastic.drawShadeElement();
@@ -212,18 +217,14 @@ CroptasticResizeHandle.prototype.fixedCornerForSelf = function () {
 
 CroptasticResizeHandle.prototype.positionHandle = function () {
   var center = this.croptastic.positionCoordinates(this.position);
-  var new_handle_center_x;
-  var new_handle_center_y;
-  new_handle_center_x = positionEnum.properties[this.position].offset_x(center.x,
-                                                                        this.handle_side_length / 2);
-  new_handle_center_y = positionEnum.properties[this.position].offset_y(center.y,
-                                                                        this.handle_side_length / 2);
+  var new_handle_center = this.resizeHandleCenterCoordinate();
+
   var current_handle_center_x = this.handle.matrix.x(this.handle.attrs.path[0][1],
                                                      this.handle.attrs.path[0][2]) + (this.handle_side_length / 2);
   var current_handle_center_y = this.handle.matrix.y(this.handle.attrs.path[0][1],
-                                                  this.handle.attrs.path[0][2]) + (this.handle_side_length / 2);
-  var point_distance_x = new_handle_center_x - current_handle_center_x;
-  var point_distance_y = new_handle_center_y - current_handle_center_y;
+                                                     this.handle.attrs.path[0][2]) + (this.handle_side_length / 2);
+  var point_distance_x = new_handle_center.x - current_handle_center_x;
+  var point_distance_y = new_handle_center.y - current_handle_center_y;
   var xformString = "T" + point_distance_x + "," + point_distance_y;
   this.handle.transform("..." + xformString);
 };
@@ -401,7 +402,7 @@ Croptastic.prototype.positionCoordinates = function (position) {
   }
 
   var ul, ur, lr, ll;
-  switch(position) {
+  switch (position) {
   case positionEnum.CENTER_TOP:
     ul = this.positionCoordinates(positionEnum.UL);
     ur = this.positionCoordinates(positionEnum.UR);
