@@ -32,35 +32,43 @@ CroptasticResizeHandle.ViewportPositionEnum = {
   properties : {
     0 : {
       'offset_x' : add,
-      'offset_y' : add
+      'offset_y' : add,
+      'cursor' : "nwse-resize"
     },
     1 : {
       'offset_x' : subtract,
-      'offset_y' : add
+      'offset_y' : add,
+      'cursor' : "nesw-resize"
     },
     2 : {
       'offset_x' : subtract,
-      'offset_y' : subtract
+      'offset_y' : subtract,
+      'cursor' : "nwse-resize"
     },
     3 : {
       'offset_x' : add,
-      'offset_y' : subtract
+      'offset_y' : subtract,
+      'cursor' : "nesw-resize"
     },
     4 : {
       'offset_x' : identity,
-      'offset_y' : add
+      'offset_y' : add,
+      'cursor' : "ns-resize"
     },
     5 : {
       'offset_x' : subtract,
-      'offset_y' : identity
+      'offset_y' : identity,
+      'cursor' : "ew-resize"
     },
     6 : {
       'offset_x' : identity,
-      'offset_y' : subtract
+      'offset_y' : subtract,
+      'cursor' : "ns-resize"
     },
     7 : {
       'offset_x' : add,
-      'offset_y' : identity
+      'offset_y' : identity,
+      'cursor' : "ew-resize"
     }
   }
 };
@@ -99,6 +107,14 @@ CroptasticResizeHandle.prototype.resizeHandleCenterCoordinate = function () {
   return handle_center;
 };
 
+CroptasticResizeHandle.prototype.setHandleCursor = function (cursor) {
+  if (cursor !== undefined) {
+    this.handle.node.style.cursor = cursor;
+  } else {
+    this.handle.node.style.cursor = positionEnum.properties[this.position].cursor;
+  }
+};
+
 CroptasticResizeHandle.prototype.drawResizeHandle = function () {
   var handle_center = this.resizeHandleCenterCoordinate();
   var handle_points = squareAroundPoint(handle_center.x, handle_center.y,
@@ -107,6 +123,8 @@ CroptasticResizeHandle.prototype.drawResizeHandle = function () {
   this.handle =
     this.croptastic.paper.path(handle_svg).attr("fill",
                                                 "#949393").attr("opacity", ".7");
+  this.setHandleCursor();
+
   var croptastic = this;
   /*jslint unparam: true*/
   var handle = this.handle;
@@ -389,11 +407,19 @@ Croptastic.prototype.setCursorsForResize = function (cursor) {
   document.getElementsByTagName("body")[0].style.cursor = cursor;
   this.oldViewportCursor = this.viewportElement.node.style.cursor;
   this.viewportElement.node.style.cursor = cursor;
+  var i = 0;
+  for (i = 0; i < this.resizeHandles.length ; i++) {
+    this.resizeHandles[i].setHandleCursor(cursor);
+  }
 };
 
 Croptastic.prototype.setCursorsForResizeEnd = function () {
   document.getElementsByTagName("body")[0].style.cursor = this.oldBodyCursor;
   this.viewportElement.node.style.cursor = this.oldViewportCursor;
+  var i = 0;
+  for (i = 0; i < this.resizeHandles.length ; i++) {
+    this.resizeHandles[i].setHandleCursor();
+  }
 };
 
 Croptastic.prototype.positionCoordinates = function (position) {
@@ -564,10 +590,6 @@ Croptastic.prototype.drawViewport = function () {
   this.viewportElementAndHandlesSet = st;
   $(this.viewportElement.node).css("cursor", "-webkit-grabbing");
   $(this.viewportElement.node).css("cursor", "-moz-grabbing");
-  // this.ul_handle.handle.node.style.cursor = "nwse-resize";
-  // this.ur_handle.handle.node.style.cursor = "nesw-resize";
-  // this.lr_handle.node.style.cursor = "nwse-resize";
-  // this.ll_handle.node.style.cursor = "nesw-resize";
 };
 
 Croptastic.prototype.scaleViewport = function (newSideLengthX, newSideLengthY, fixed_point_x, fixed_point_y) {
