@@ -33,41 +33,57 @@ CroptasticResizeHandle.ViewportPositionEnum = {
     0 : {
       'offset_x' : add,
       'offset_y' : add,
+      'left_right_freedom': true,
+      'up_down_freedom': true,
       'cursor' : "nwse-resize"
     },
     1 : {
       'offset_x' : subtract,
       'offset_y' : add,
+      'left_right_freedom': true,
+      'up_down_freedom': true,
       'cursor' : "nesw-resize"
     },
     2 : {
       'offset_x' : subtract,
       'offset_y' : subtract,
+      'left_right_freedom': true,
+      'up_down_freedom': true,
       'cursor' : "nwse-resize"
     },
     3 : {
       'offset_x' : add,
       'offset_y' : subtract,
-      'cursor' : "nesw-resize"
+      'left_right_freedom': true,
+      'up_down_freedom': true,
+     'cursor' : "nesw-resize"
     },
     4 : {
       'offset_x' : identity,
       'offset_y' : add,
+      'left_right_freedom': false,
+      'up_down_freedom': true,
       'cursor' : "ns-resize"
     },
     5 : {
       'offset_x' : subtract,
       'offset_y' : identity,
+      'left_right_freedom': true,
+      'up_down_freedom': false,
       'cursor' : "ew-resize"
     },
     6 : {
       'offset_x' : identity,
       'offset_y' : subtract,
+      'left_right_freedom': false,
+      'up_down_freedom': true,
       'cursor' : "ns-resize"
     },
     7 : {
       'offset_x' : add,
       'offset_y' : identity,
+      'left_right_freedom': true,
+      'up_down_freedom': false,
       'cursor' : "ew-resize"
     }
   }
@@ -80,18 +96,17 @@ var positionEnum = CroptasticResizeHandle.ViewportPositionEnum;
 // position is a value from ViewportPositionEnum and indicates where
 // the resize handle is.
 function CroptasticResizeHandle(croptastic, viewport,
-                                left_right_freedom,
-                                up_down_freedom, position,
+                                position,
                                 handle_side_length) {
   if (position < 0 || position > 7) {
     return null;
   }
+  this.position = position;
   this.croptastic = croptastic;
   this.viewport = viewport;
-  this.left_right_freedom = left_right_freedom;
-  this.up_down_freedom = up_down_freedom;
+  this.left_right_freedom = positionEnum.properties[this.position].left_right_freedom;
+  this.up_down_freedom = positionEnum.properties[this.position].up_down_freedom;
   this.handle_side_length = handle_side_length;
-  this.position = position;
   this.handle = null;
 
   return this;
@@ -101,9 +116,9 @@ CroptasticResizeHandle.prototype.resizeHandleCenterCoordinate = function () {
   var center = this.croptastic.positionCoordinates(this.position);
   var handle_center = {};
   handle_center.x = positionEnum.properties[this.position].offset_x(center.x,
-                                                             this.handle_side_length / 2);
+                                                                    this.handle_side_length / 2);
   handle_center.y = positionEnum.properties[this.position].offset_y(center.y,
-                                                             this.handle_side_length / 2);
+                                                                    this.handle_side_length / 2);
   return handle_center;
 };
 
@@ -513,53 +528,54 @@ Croptastic.prototype.drawViewport = function () {
   // Chrome/Safari, though.
   $(this.viewportElement.node).css("pointer-events", "visibleFill");
   // Draw resize handles.
-  var handle = new CroptasticResizeHandle(this,
-                                          this.viewportElement,
-                                          true, true, positionEnum.UL,
-                                          this.handle_side_length);
+  var handle = null;
+  handle = new CroptasticResizeHandle(this,
+                                      this.viewportElement,
+                                      positionEnum.UL,
+                                      this.handle_side_length);
 
   this.resizeHandles.push(handle);
   handle = new CroptasticResizeHandle(this,
                                       this.viewportElement,
-                                      true, true, positionEnum.UR,
+                                      positionEnum.UR,
                                       this.handle_side_length);
 
   this.resizeHandles.push(handle);
 
   handle = new CroptasticResizeHandle(this,
                                       this.viewportElement,
-                                      true, true, positionEnum.LR,
+                                      positionEnum.LR,
                                       this.handle_side_length);
 
   this.resizeHandles.push(handle);
 
   handle = new CroptasticResizeHandle(this,
                                       this.viewportElement,
-                                      true, true, positionEnum.LL,
+                                      positionEnum.LL,
                                       this.handle_side_length);
   this.resizeHandles.push(handle);
 
   handle = new CroptasticResizeHandle(this,
                                       this.viewportElement,
-                                      false, true, positionEnum.CENTER_TOP,
+                                      positionEnum.CENTER_TOP,
                                       this.handle_side_length);
   this.resizeHandles.push(handle);
 
   handle = new CroptasticResizeHandle(this,
                                       this.viewportElement,
-                                      true, false, positionEnum.CENTER_RIGHT,
+                                      positionEnum.CENTER_RIGHT,
                                       this.handle_side_length);
   this.resizeHandles.push(handle);
 
   handle = new CroptasticResizeHandle(this,
                                       this.viewportElement,
-                                      false, true, positionEnum.CENTER_BOTTOM,
+                                      positionEnum.CENTER_BOTTOM,
                                       this.handle_side_length);
   this.resizeHandles.push(handle);
 
   handle = new CroptasticResizeHandle(this,
                                       this.viewportElement,
-                                      true, false, positionEnum.CENTER_LEFT,
+                                      positionEnum.CENTER_LEFT,
                                       this.handle_side_length);
   this.resizeHandles.push(handle);
 
