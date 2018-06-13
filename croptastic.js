@@ -16,83 +16,76 @@ function identity(a) {
   return a;
 }
 
-const UL = Symbol();
-const UR = Symbol();
-const LR = Symbol();
-const LL = Symbol();
-const CENTER_TOP = Symbol();
-const CENTER_RIGHT = Symbol();
-const CENTER_BOTTOM = Symbol();
-const CENTER_LEFT = Symbol();
+const UL = Symbol("upper-left");
+const UR = Symbol("upper-right");
+const LR = Symbol("lower-right");
+const LL = Symbol("lower-left");
+const CENTER_TOP = Symbol("center-top");
+const CENTER_RIGHT = Symbol("center-right");
+const CENTER_BOTTOM = Symbol("center-bottom");
+const CENTER_LEFT = Symbol("center-left");
 
-function getPropertiesForHandle(handle) {
-  switch(handle) {
-  case UL:
-    return {
+const propertiesForHandle = {
+    [UL] : {
       'offset_x' : add,
       'offset_y' : add,
       'left_right_freedom': true,
       'up_down_freedom': true,
-      'cursor' : "nwse-resize"
-    };
-  case UR:
-    return {
+      'cursor' : "nwse-resize",
+      'raphael_corner_number' : 0
+    },
+    [UR] : {
       'offset_x' : subtract,
       'offset_y' : add,
       'left_right_freedom': true,
       'up_down_freedom': true,
-      'cursor' : "nesw-resize"
-    };
-  case LR:
-    return {
+      'cursor' : "nesw-resize",
+      'raphael_corner_number' : 1
+    },
+    [LR] : {
       'offset_x' : subtract,
       'offset_y' : subtract,
       'left_right_freedom': true,
       'up_down_freedom': true,
-      'cursor' : "nwse-resize"
-    };
-  case LL:
-    return {
+      'cursor' : "nwse-resize",
+      'raphael_corner_number' : 2
+    },
+    [LL] : {
       'offset_x' : add,
       'offset_y' : subtract,
       'left_right_freedom': true,
       'up_down_freedom': true,
-      'cursor' : "nesw-resize"
-    };
-  case CENTER_TOP :
-    return {
+      'cursor' : "nesw-resize",
+      'raphael_corner_number' : 3
+    },
+    [CENTER_TOP] : {
       'offset_x' : identity,
       'offset_y' : add,
       'left_right_freedom': false,
       'up_down_freedom': true,
       'cursor' : "ns-resize"
-    };
-  case CENTER_RIGHT:
-    return {
+    },
+    [CENTER_RIGHT] : {
       'offset_x' : subtract,
       'offset_y' : identity,
       'left_right_freedom': true,
       'up_down_freedom': false,
       'cursor' : "ew-resize"
-    };
-  case CENTER_BOTTOM:
-    return {
+    }, 
+    [CENTER_BOTTOM] : {
       'offset_x' : identity,
       'offset_y' : subtract,
       'left_right_freedom': false,
       'up_down_freedom': true,
       'cursor' : "ns-resize"
-    };
-  case CENTER_LEFT:
-    return {
+    },
+    [CENTER_LEFT] : {
       'offset_x' : add,
       'offset_y' : identity,
       'left_right_freedom': true,
       'up_down_freedom': false,
       'cursor' : "ew-resize"
-    };
-  }
-  throw "Invalid position specified";
+    }
 }
 
 // Helper class to encapsulate resize handle behavior.  left_right &
@@ -106,8 +99,8 @@ class CroptasticResizeHandle {
     this.position = position;
     this.croptastic = croptastic;
     this.viewport = viewport;
-    this.left_right_freedom = getPropertiesForHandle(this.position).left_right_freedom;
-    this.up_down_freedom = getPropertiesForHandle(this.position).up_down_freedom;
+    this.left_right_freedom = propertiesForHandle[this.position].left_right_freedom;
+    this.up_down_freedom = propertiesForHandle[this.position].up_down_freedom;
     this.handle_side_length = handle_side_length;
     this.handle = null;
   }
@@ -115,9 +108,9 @@ class CroptasticResizeHandle {
   resizeHandleCenterCoordinate() {
     var center = this.croptastic.positionCoordinates(this.position);
     var handle_center = {};
-    handle_center.x = getPropertiesForHandle(this.position).offset_x(center.x,
+    handle_center.x = propertiesForHandle[this.position].offset_x(center.x,
 								      this.handle_side_length / 2);
-    handle_center.y = getPropertiesForHandle(this.position).offset_y(center.y,
+    handle_center.y = propertiesForHandle[this.position].offset_y(center.y,
 								      this.handle_side_length / 2);
     return handle_center;
   }
@@ -126,7 +119,7 @@ class CroptasticResizeHandle {
     if (cursor !== undefined) {
       this.handle.node.style.cursor = cursor;
     } else {
-      this.handle.node.style.cursor = getPropertiesForHandle(this.position).cursor;
+      this.handle.node.style.cursor = propertiesForHandle[this.position].cursor;
     }
   }
 
@@ -166,9 +159,9 @@ class CroptasticResizeHandle {
 	var handle_center_x = handle.matrix.x(handle.attrs.path[0][1],
                                               handle.attrs.path[0][2]) + (croptastic.handle_side_length / 2);
 	viewport_size_dx = mouseX_local - handle_center_x;
-	if (croptastic.position === positionEnum.UL ||
-            croptastic.position === positionEnum.LL ||
-            croptastic.position === positionEnum.CENTER_LEFT) {
+	if (croptastic.position === UL ||
+            croptastic.position === LL ||
+            croptastic.position === CENTER_LEFT) {
           viewport_size_dx *= -1;
 	}
 	newSideLengthX += viewport_size_dx;
@@ -178,9 +171,9 @@ class CroptasticResizeHandle {
 	var handle_center_y = handle.matrix.y(handle.attrs.path[0][1],
                                               handle.attrs.path[0][2]) + (croptastic.handle_side_length / 2);
 	viewport_size_dy = mouseY_local - handle_center_y;
-	if (croptastic.position === positionEnum.UL ||
-            croptastic.position === positionEnum.UR ||
-            croptastic.position === positionEnum.CENTER_TOP) {
+	if (croptastic.position === UL ||
+            croptastic.position === UR ||
+            croptastic.position === CENTER_TOP) {
           viewport_size_dy *= -1;
 	}
 	newSideLengthY += viewport_size_dy;
@@ -402,7 +395,7 @@ class Croptastic {
     case UR:
     case LR:
     case LL:
-      return this.viewportCornerCoordinates(position);
+      return this.viewportCornerCoordinates(propertiesForHandle[position]['raphael_corner_number']);
     case CENTER_TOP:
       ul = this.positionCoordinates(UL);
       ur = this.positionCoordinates(UR);
@@ -597,8 +590,7 @@ class Croptastic {
     var scaleString = "S" + multiplierX + "," +
         multiplierY + "," + fixed_point_x + "," + fixed_point_y;
     this.viewportElement.transform("..." + scaleString);
-    // this.gridlineElement.transform("..." + scaleString);
-    var new_point = this.positionCoordinates(0);
+    var new_point = this.positionCoordinates(UL);
     var newx = new_point.x;
     var newy = new_point.y;
 
