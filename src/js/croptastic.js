@@ -1,6 +1,7 @@
 /*jslint newcap: true, vars: true, indent: 2, plusplus: true */
 /*global alert, Raphael, window, document, $, console */
-"use strict";
+
+let Raphael = require('raphael');
 
 // The following three functions are defined so we call them via
 // function pointer.
@@ -106,12 +107,12 @@ class CroptasticResizeHandle {
   }
 
   resizeHandleCenterCoordinate() {
-    var center = this.croptastic.positionCoordinates(this.position);
-    var handle_center = {};
+    const center = this.croptastic.positionCoordinates(this.position);
+    let handle_center = {};
     handle_center.x = propertiesForHandle[this.position].offset_x(center.x,
-								      this.handle_side_length / 2);
+                                                                  this.handle_side_length / 2);
     handle_center.y = propertiesForHandle[this.position].offset_y(center.y,
-								      this.handle_side_length / 2);
+                                                                  this.handle_side_length / 2);
     return handle_center;
   }
 
@@ -124,30 +125,28 @@ class CroptasticResizeHandle {
   }
 
   drawResizeHandle() {
-    var handle_center = this.resizeHandleCenterCoordinate();
-    var handle_points = squareAroundPoint(handle_center.x, handle_center.y,
+    const handle_center = this.resizeHandleCenterCoordinate();
+    const handle_points = squareAroundPoint(handle_center.x, handle_center.y,
                                           this.handle_side_length);
-    var handle_svg = pointsToSVGPolygonString(handle_points);
+    const handle_svg = pointsToSVGPolygonString(handle_points);
     this.handle =
       this.croptastic.paper.path(handle_svg).attr("fill",
                                                   "#949393").attr("opacity", ".7");
     this.setHandleCursor();
 
-    var croptastic = this;
     /*jslint unparam: true*/
-    var handle = this.handle;
-    handle.drag(function (dx, dy, mouseX, mouseY, e) {
+    this.handle.drag((dx, dy, mouseX, mouseY, e) => {
       // Convert mouse coordinates from browser (which are in the
       // browser window coordinates) to paper/picture coordinates, which
       // is what Raphael expects.
-      var mouseX_local = mouseX - croptastic.croptastic.xoffset;
-      var mouseY_local = mouseY - croptastic.croptastic.yoffset;
+      let mouseX_local = mouseX - this.croptastic.xoffset;
+      let mouseY_local = mouseY - this.croptastic.yoffset;
 
-      var viewport_size_dx = 0;
-      var viewport_size_dy = 0;
+      let viewport_size_dx = 0;
+      let viewport_size_dy = 0;
 
-      var newSideLengthX = croptastic.croptastic.sideLengthX;
-      var newSideLengthY = croptastic.croptastic.sideLengthY;
+      let newSideLengthX = this.croptastic.sideLengthX;
+      let newSideLengthY = this.croptastic.sideLengthY;
       // There is a UI issue here - by calculating based on the center
       // of the resize handle, there is a noticable visual artifact when
       // the user grabs the handle anywhere but the center of the handle
@@ -155,67 +154,67 @@ class CroptasticResizeHandle {
       // of the LR.  Much time was spent trying to correct for this but
       // I had to move onto other things - it definitely should be
       // fixed, though.
-      if (croptastic.left_right_freedom) {
-	var handle_center_x = handle.matrix.x(handle.attrs.path[0][1],
-                                              handle.attrs.path[0][2]) + (croptastic.handle_side_length / 2);
-	viewport_size_dx = mouseX_local - handle_center_x;
-	if (croptastic.position === UL ||
-            croptastic.position === LL ||
-            croptastic.position === CENTER_LEFT) {
+      if (this.left_right_freedom) {
+        let handle_center_x = this.handle.matrix.x(this.handle.attrs.path[0][1],
+						   this.handle.attrs.path[0][2]) + (this.handle_side_length / 2);
+        viewport_size_dx = mouseX_local - handle_center_x;
+        if (this.position === UL ||
+            this.position === LL ||
+            this.position === CENTER_LEFT) {
           viewport_size_dx *= -1;
-	}
-	newSideLengthX += viewport_size_dx;
+        }
+        newSideLengthX += viewport_size_dx;
       }
 
-      if (croptastic.up_down_freedom) {
-	var handle_center_y = handle.matrix.y(handle.attrs.path[0][1],
-                                              handle.attrs.path[0][2]) + (croptastic.handle_side_length / 2);
-	viewport_size_dy = mouseY_local - handle_center_y;
-	if (croptastic.position === UL ||
-            croptastic.position === UR ||
-            croptastic.position === CENTER_TOP) {
+      if (this.up_down_freedom) {
+        let handle_center_y = this.handle.matrix.y(this.handle.attrs.path[0][1],
+						   this.handle.attrs.path[0][2]) + (this.handle_side_length / 2);
+        viewport_size_dy = mouseY_local - handle_center_y;
+        if (this.position === UL ||
+            this.position === UR ||
+            this.position === CENTER_TOP) {
           viewport_size_dy *= -1;
-	}
-	newSideLengthY += viewport_size_dy;
+        }
+        newSideLengthY += viewport_size_dy;
       }
 
       // Prevent resize if the user has dragged the viewport to be too
       // small in both dimensions.
-      if (newSideLengthX < croptastic.croptastic.viewportSizeThreshold &&
-          newSideLengthY < croptastic.croptastic.viewportSizeThreshold) {
-	return;
+      if (newSideLengthX < this.croptastic.viewportSizeThreshold &&
+          newSideLengthY < this.croptastic.viewportSizeThreshold) {
+        return;
       }
 
       // If the user has only hit the minimum in one dimension, we can
       // still resize in the other dimension.
-      if (newSideLengthX < croptastic.croptastic.viewportSizeThreshold) {
-	newSideLengthX = croptastic.croptastic.viewportSizeThreshold;
-      } else if (newSideLengthY < croptastic.croptastic.viewportSizeThreshold) {
-	newSideLengthY = croptastic.croptastic.viewportSizeThreshold;
+      if (newSideLengthX < this.croptastic.viewportSizeThreshold) {
+        newSideLengthX = this.croptastic.viewportSizeThreshold;
+      } else if (newSideLengthY < this.croptastic.viewportSizeThreshold) {
+        newSideLengthY = this.croptastic.viewportSizeThreshold;
       }
 
-      var scale_origin = croptastic.croptastic.positionCoordinates(croptastic.fixedCornerForSelf(this.position));
-      var scale_origin_x = scale_origin.x;
-      var scale_origin_y = scale_origin.y;
-      croptastic.croptastic.scaleViewport(newSideLengthX, newSideLengthY,
+      let scale_origin = this.croptastic.positionCoordinates(this.fixedCornerForSelf(this.position));
+      let scale_origin_x = scale_origin.x;
+      let scale_origin_y = scale_origin.y;
+      this.croptastic.scaleViewport(newSideLengthX, newSideLengthY,
                                           scale_origin_x, scale_origin_y);
-      croptastic.croptastic.positionAllResizeHandles();
+      this.croptastic.positionAllResizeHandles();
 
-      croptastic.croptastic.drawShadeElement();
-      croptastic.croptastic.updatePreview();
-    }, function (x, y, e) {
+      this.croptastic.drawShadeElement();
+      this.croptastic.updatePreview();
+    }, (x, y, e) => {
       // We want the handle the user is dragging to move to the front,
       // because if the user drags over another resize handle, we want
       // our cursor to still be shown.
-      handle.toFront();
+      this.handle.toFront();
 
-      croptastic.croptastic.setCursorsForResize(handle.node.style.cursor);
-    }, function (e) {
-      croptastic.croptastic.setCursorsForResizeEnd();
+      this.croptastic.setCursorsForResize(this.handle.node.style.cursor);
+    }, (e) => {
+      this.croptastic.setCursorsForResizeEnd();
     });
     /*jslint unparam: true*/
-    handle.toFront();
-    return handle;
+    this.handle.toFront();
+    return this.handle;
   }
 
   fixedCornerForSelf() {
@@ -242,23 +241,21 @@ class CroptasticResizeHandle {
   }
 
   positionHandle() {
-    var center = this.croptastic.positionCoordinates(this.position);
-    var new_handle_center = this.resizeHandleCenterCoordinate();
+    let center = this.croptastic.positionCoordinates(this.position);
+    let new_handle_center = this.resizeHandleCenterCoordinate();
 
-    var current_handle_center_x = this.handle.matrix.x(this.handle.attrs.path[0][1],
-						       this.handle.attrs.path[0][2]) + (this.handle_side_length / 2);
-    var current_handle_center_y = this.handle.matrix.y(this.handle.attrs.path[0][1],
-						       this.handle.attrs.path[0][2]) + (this.handle_side_length / 2);
-    var point_distance_x = new_handle_center.x - current_handle_center_x;
-    var point_distance_y = new_handle_center.y - current_handle_center_y;
-    var xformString = "T" + point_distance_x + "," + point_distance_y;
+    let current_handle_center_x = this.handle.matrix.x(this.handle.attrs.path[0][1],
+                                                       this.handle.attrs.path[0][2]) + (this.handle_side_length / 2);
+    let current_handle_center_y = this.handle.matrix.y(this.handle.attrs.path[0][1],
+                                                       this.handle.attrs.path[0][2]) + (this.handle_side_length / 2);
+    let point_distance_x = new_handle_center.x - current_handle_center_x;
+    let point_distance_y = new_handle_center.y - current_handle_center_y;
+    let xformString = "T" + point_distance_x + "," + point_distance_y;
     this.handle.transform("..." + xformString);
   }
-
 }
 
-
-class Croptastic {
+export class Croptastic {
   constructor(parentNode, previewNode) {
     this.parentNode = parentNode;
     this.paper = null;
@@ -284,7 +281,7 @@ class Croptastic {
     this.yoffset = null;
 
     if (previewNode !== null &&
-	previewNode.tagName.toLowerCase() !== "canvas") {
+        previewNode.tagName.toLowerCase() !== "canvas") {
       alert("Preview widget needs to be canvas");
     }
 
@@ -302,12 +299,14 @@ class Croptastic {
     this.sideLengthX = 100;
     this.sideLengthY = 100;
     this.viewportSizeThreshold = 20;
+    this.shadeElementFillColor = "#949393";
+    this.shadeElementOpacity = 0.7;
   }
 
   setup(pic_url) {
     this.parentNode.innerHTML = "";
     this.paper = Raphael(this.parentNode);
-    var boundingRect = this.parentNode.getBoundingClientRect();
+    let boundingRect = this.parentNode.getBoundingClientRect();
     this.xoffset = boundingRect.left + window.scrollX;
     this.yoffset = boundingRect.top + window.scrollY;
     this.width = boundingRect.width;
@@ -325,6 +324,16 @@ class Croptastic {
       this.previewHeight = $("#profile-picture-crop-preview").height();
       this.updatePreview();
     }
+    $(window).on('keydown', (ev) => {
+      if (ev.originalEvent.key == 'e') {
+        if (this.shadeElementOpacity == 0.7) {
+          this.shadeElementOpacity = 1.0;
+        } else {
+          this.shadeElementOpacity = 0.7;
+        }
+        this.drawShadeElement();
+      }
+    });
   }
 
   updatePreview() {
@@ -338,25 +347,25 @@ class Croptastic {
       // The image isn't actually attached to the DOM, so width/height
       // and naturalWidth,naturalHeight (resp) are the same.
       this.widthMultiplier =
-	this.imageForRaphaelSVGImage.width / this.svgImage.attr("width");
+        this.imageForRaphaelSVGImage.width / this.svgImage.attr("width");
       if (this.widthMultiplier === 0) {
-	this.widthMultiplier = null;
-	return;
+        this.widthMultiplier = null;
+        return;
       }
     }
 
     if (this.heightMultiplier === null) {
       this.heightMultiplier =
-	this.imageForRaphaelSVGImage.height / this.svgImage.attr("height");
+        this.imageForRaphaelSVGImage.height / this.svgImage.attr("height");
       if (this.heightMultiplier === 0) {
-	this.heightMultiplier = null;
-	return;
+        this.heightMultiplier = null;
+        return;
       }
     }
 
     this.drawingContext.clearRect(0, 0, this.previewWidth, this.previewHeight);
-    var image_coordinate_ul_x = (this.viewportCenterX - (this.sideLengthX / 2)) * this.widthMultiplier;
-    var image_coordinate_ul_y = (this.viewportCenterY - (this.sideLengthY / 2)) * this.heightMultiplier;
+    let image_coordinate_ul_x = (this.viewportCenterX - (this.sideLengthX / 2)) * this.widthMultiplier;
+    let image_coordinate_ul_y = (this.viewportCenterY - (this.sideLengthY / 2)) * this.heightMultiplier;
 
     this.drawingContext.drawImage(this.imageForRaphaelSVGImage,
                                   image_coordinate_ul_x, // start x
@@ -374,7 +383,7 @@ class Croptastic {
     document.getElementsByTagName("body")[0].style.cursor = cursor;
     this.oldViewportCursor = this.viewportElement.node.style.cursor;
     this.viewportElement.node.style.cursor = cursor;
-    var i = 0;
+    let i = 0;
     for (i = 0; i < this.resizeHandles.length ; i++) {
       this.resizeHandles[i].setHandleCursor(cursor);
     }
@@ -400,29 +409,29 @@ class Croptastic {
       ul = this.positionCoordinates(UL);
       ur = this.positionCoordinates(UR);
       return {
-	'x': ur.x - ((ur.x - ul.x) / 2),
-	'y': ul.y
+        'x': ur.x - ((ur.x - ul.x) / 2),
+        'y': ul.y
       };
     case CENTER_RIGHT:
       ur = this.positionCoordinates(UR);
       lr = this.positionCoordinates(LR);
       return {
-	'x': ur.x,
-	'y': lr.y - ((lr.y - ur.y) / 2)
+        'x': ur.x,
+        'y': lr.y - ((lr.y - ur.y) / 2)
       };
     case CENTER_BOTTOM:
       lr = this.positionCoordinates(LR);
       ll = this.positionCoordinates(LL);
       return {
-	'x': lr.x - ((lr.x - ll.x) / 2),
-	'y': ll.y
+        'x': lr.x - ((lr.x - ll.x) / 2),
+        'y': ll.y
       };
     case CENTER_LEFT:
       ul = this.positionCoordinates(UL);
       ll = this.positionCoordinates(LL);
       return {
-	'x': ul.x,
-	'y': ll.y - ((ll.y - ul.y) / 2)
+        'x': ul.x,
+        'y': ll.y - ((ll.y - ul.y) / 2)
       };
     default:
       return null;
@@ -430,36 +439,36 @@ class Croptastic {
   }
 
   viewportCornerCoordinates(cornerNumber) {
-    var pathElement = this.viewportElement.attrs.path[cornerNumber];
+    let pathElement = this.viewportElement.attrs.path[cornerNumber];
     return {
       'x': this.viewportElement.matrix.x(pathElement[1],
-					 pathElement[2]),
+                                         pathElement[2]),
       'y': this.viewportElement.matrix.y(pathElement[1],
-					 pathElement[2])
+                                         pathElement[2])
     };
   }
 
   positionAllResizeHandles() {
-    var i = 0;
+    let i = 0;
     for (i = 0; i < this.resizeHandles.length; ++i) {
       this.resizeHandles[i].positionHandle();
     }
   }
 
   drawResizeHandles() {
-    var i = 0;
+    let i = 0;
     for (i = 0; i < this.resizeHandles.length; ++i) {
       this.resizeHandles[i].drawResizeHandle();
     }
   }
 
   drawViewport() {
-    var centerX = this.viewportCenterX;
-    var centerY = this.viewportCenterY;
-    var innerPolyPoints = rectangleAroundPoint(centerX, centerY,
+    let centerX = this.viewportCenterX;
+    let centerY = this.viewportCenterY;
+    let innerPolyPoints = rectangleAroundPoint(centerX, centerY,
                                                this.sideLengthX,
                                                this.sideLengthY);
-    var viewportSVG = pointsToSVGPolygonString(innerPolyPoints);
+    let viewportSVG = pointsToSVGPolygonString(innerPolyPoints);
     if (this.viewportElement !== null) {
       this.viewportElement.remove();
       this.viewportElement = null;
@@ -467,7 +476,7 @@ class Croptastic {
 
     this.viewportElement = this.paper.path(viewportSVG).attr("fill",
                                                              "transparent");
-    var ul_coordinate = innerPolyPoints[0];
+    let ul_coordinate = innerPolyPoints[0];
     // var gridline_points = [];
     // var grid_start_x = ul_coordinate.x + (this.sideLengthX / 3);
     // var grid_start_y = ul_coordinate.y;
@@ -481,60 +490,59 @@ class Croptastic {
     // Chrome/Safari, though.
     $(this.viewportElement.node).css("pointer-events", "visibleFill");
     // Draw resize handles.
-    var handle = null;
+    let handle = null;
     handle = new CroptasticResizeHandle(this,
-					this.viewportElement,
-					UL,
-					this.handle_side_length);
+                                        this.viewportElement,
+                                        UL,
+                                        this.handle_side_length);
 
     this.resizeHandles.push(handle);
     handle = new CroptasticResizeHandle(this,
-					this.viewportElement,
-					UR,
-					this.handle_side_length);
-
-    this.resizeHandles.push(handle);
-
-    handle = new CroptasticResizeHandle(this,
-					this.viewportElement,
-					LR,
-					this.handle_side_length);
+                                        this.viewportElement,
+                                        UR,
+                                        this.handle_side_length);
 
     this.resizeHandles.push(handle);
 
     handle = new CroptasticResizeHandle(this,
-					this.viewportElement,
-					LL,
-					this.handle_side_length);
+                                        this.viewportElement,
+                                        LR,
+                                        this.handle_side_length);
+
     this.resizeHandles.push(handle);
 
     handle = new CroptasticResizeHandle(this,
-					this.viewportElement,
-					CENTER_TOP,
-					this.handle_side_length);
+                                        this.viewportElement,
+                                        LL,
+                                        this.handle_side_length);
     this.resizeHandles.push(handle);
 
     handle = new CroptasticResizeHandle(this,
-					this.viewportElement,
-					CENTER_RIGHT,
-					this.handle_side_length);
+                                        this.viewportElement,
+                                        CENTER_TOP,
+                                        this.handle_side_length);
     this.resizeHandles.push(handle);
 
     handle = new CroptasticResizeHandle(this,
-					this.viewportElement,
-					CENTER_BOTTOM,
-					this.handle_side_length);
+                                        this.viewportElement,
+                                        CENTER_RIGHT,
+                                        this.handle_side_length);
     this.resizeHandles.push(handle);
 
     handle = new CroptasticResizeHandle(this,
-					this.viewportElement,
-					CENTER_LEFT,
-					this.handle_side_length);
+                                        this.viewportElement,
+                                        CENTER_BOTTOM,
+                                        this.handle_side_length);
+    this.resizeHandles.push(handle);
+
+    handle = new CroptasticResizeHandle(this,
+                                        this.viewportElement,
+                                        CENTER_LEFT,
+                                        this.handle_side_length);
     this.resizeHandles.push(handle);
 
     this.drawResizeHandles();
 
-    var croptastic = this;
     // dx/dy from Raphael are the changes in x/y from the drag start,
     // not the most recent change of the mouse.  Since we want to
     // track the mouse cursor as the user moves it, we need to figure
@@ -542,25 +550,25 @@ class Croptastic {
     // of the drag.  We store the last x/y we've received in
     // Croptastic.last{x,y}.
     /*jslint unparam: true*/
-    this.viewportElement.drag(function (dx, dy, x, y, e) {
-      var realDX = (x - croptastic.lastx);
-      var realDY = (y - croptastic.lasty);
-      croptastic.viewportCenterX += realDX;
-      croptastic.viewportCenterY += realDY;
-      croptastic.lastx = x;
-      croptastic.lasty = y;
-      croptastic.moveInnerViewport(realDX, realDY);
-      croptastic.drawShadeElement();
-    }, function (x, y, e) {
-      croptastic.lastx = x;
-      croptastic.lasty = y;
+    this.viewportElement.drag((dx, dy, x, y, e) => {
+      let realDX = (x - this.lastx);
+      let realDY = (y - this.lasty);
+      this.viewportCenterX += realDX;
+      this.viewportCenterY += realDY;
+      this.lastx = x;
+      this.lasty = y;
+      this.moveInnerViewport(realDX, realDY);
+      this.drawShadeElement();
+    }, (x, y, e) => {
+      this.lastx = x;
+      this.lasty = y;
     });
     /*jslint unparam: false*/
 
-    var st;
+    let st;
     st = this.paper.set();
     st.push(this.viewportElement);
-    var i = 0;
+    let i = 0;
     for (i = 0; i < this.resizeHandles.length; ++i) {
       st.push(this.resizeHandles[i].handle);
     }
@@ -571,8 +579,8 @@ class Croptastic {
   }
 
   scaleViewport(newSideLengthX, newSideLengthY, fixed_point_x, fixed_point_y) {
-    var multiplierX;
-    var multiplierY;
+    let multiplierX;
+    let multiplierY;
     if (newSideLengthX) {
       multiplierX = newSideLengthX / this.sideLengthX;
       this.sideLengthX = newSideLengthX;
@@ -587,12 +595,12 @@ class Croptastic {
       multiplierY = 1;
     }
 
-    var scaleString = "S" + multiplierX + "," +
+    let scaleString = "S" + multiplierX + "," +
         multiplierY + "," + fixed_point_x + "," + fixed_point_y;
     this.viewportElement.transform("..." + scaleString);
-    var new_point = this.positionCoordinates(UL);
-    var newx = new_point.x;
-    var newy = new_point.y;
+    let new_point = this.positionCoordinates(UL);
+    let newx = new_point.x;
+    let newy = new_point.y;
 
     if (newSideLengthX) {
       this.viewportCenterX = newx + (newSideLengthX / 2);
@@ -603,7 +611,7 @@ class Croptastic {
   }
 
   moveInnerViewport(dx, dy) {
-    var xformString = "T" + dx + "," + dy;
+    let xformString = "T" + dx + "," + dy;
     this.viewportElementAndHandlesSet.transform("..." + xformString);
     this.updatePreview();
   }
@@ -613,23 +621,21 @@ class Croptastic {
       this.shadeElement.remove();
       this.shadeElement = null;
     }
-    var polyFill = "#949393";
-    var fillOpacity = 0.7;
-    var centerX = this.viewportCenterX;
-    var centerY = this.viewportCenterY;
-    var viewport_points = rectangleAroundPoint(centerX, centerY, this.sideLengthX, this.sideLengthY);
-    var outerPolyPoints = [{'x' : 0, 'y' : 0},
+    let centerX = this.viewportCenterX;
+    let centerY = this.viewportCenterY;
+    let viewport_points = rectangleAroundPoint(centerX, centerY, this.sideLengthX, this.sideLengthY);
+    let outerPolyPoints = [{'x' : 0, 'y' : 0},
                            {'x' : this.width, 'y' : 0},
                            {'x' : this.width, 'y' : this.height},
                            {'x' : 0, 'y' : this.height}];
     // Note the order of the points - it's required to go counter
     // clockwise with Raphael so that it considers this a subtraction
     // from the outer polygon.
-    var innerPolyPoints = viewport_points.reverse();
+    let innerPolyPoints = viewport_points.reverse();
 
-    var polySVG = pointsToSVGPolygonString(outerPolyPoints);
+    let polySVG = pointsToSVGPolygonString(outerPolyPoints);
     polySVG += pointsToSVGPolygonString(innerPolyPoints);
-    this.shadeElement = this.paper.path(polySVG).attr("fill", polyFill).attr("opacity", fillOpacity);
+    this.shadeElement = this.paper.path(polySVG).attr("fill", this.shadeElementFillColor).attr("opacity", this.shadeElementOpacity);
     this.shadeElement.toBack();
     this.svgImage.toBack();
   }
@@ -641,8 +647,8 @@ class Croptastic {
 }
 
 function pointsToSVGPolygonString(points) {
-  var svgstring = "M" + points[0].x + "," + points[0].y + " ";
-  var i = 0;
+  let svgstring = "M" + points[0].x + "," + points[0].y + " ";
+  let i = 0;
   for (i = 1; i < points.length; i += 1) {
     svgstring += "L" + points[i].x + "," + points[i].y + " ";
   }
@@ -654,8 +660,8 @@ function pointsToSVGPolygonString(points) {
 // length sideLength{X,Y} around (x,y).  The points are returned in
 // clockwise order starting from the upper left.
 function rectangleAroundPoint(x, y, sideLengthX, sideLengthY) {
-  var halfXSideLength = sideLengthX / 2;
-  var halfYSideLength = sideLengthY / 2;
+  let halfXSideLength = sideLengthX / 2;
+  let halfYSideLength = sideLengthY / 2;
   return [
     {
       'x' : x - halfXSideLength,   // upper left
