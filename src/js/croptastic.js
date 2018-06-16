@@ -1,6 +1,6 @@
 /* global $,require, Raphael */
 
-require('raphael');
+let Raphael = require('raphael'); /* eslint no-unused-vars: 0 */
 
 let add = (a, b) => a+b;
 let subtract = (a, b) => a - b;
