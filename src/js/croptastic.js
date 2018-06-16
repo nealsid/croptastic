@@ -2,19 +2,28 @@
 
 let Raphael = require('raphael'); /* eslint no-unused-vars: 0 */
 
-let add = (a, b) => a+b;
-let subtract = (a, b) => a - b;
-let identity = (a) => a;
-
+// Symbol representing upper left corner.
 const UL = Symbol('upper-left');
+// Symbol representing upper right corner.
 const UR = Symbol('upper-right');
+// Symbol representing lower right corner.
 const LR = Symbol('lower-right');
+// Symbol representing lower left corner.
 const LL = Symbol('lower-left');
+// Symbol representing center top position.
 const CENTER_TOP = Symbol('center-top');
+// Symbol representing center right position.
 const CENTER_RIGHT = Symbol('center-right');
+// Symbol representing center bottom position.
 const CENTER_BOTTOM = Symbol('center-bottom');
+// Symbol representing center left position.
 const CENTER_LEFT = Symbol('center-left');
 
+// 3 functions that let us abstract away the x/y offsets when
+// calculating the x/y changes during drag.
+let add = (a, b) => a + b;
+let subtract = (a, b) => a - b;
+let identity = (a) => a;
 const propertiesForHandle = {
     [UL] : {
       'offset_x' : add,
